@@ -1,0 +1,46 @@
+## @file
+#  TODO: Brief Description of UEFI Driver HookingDriver
+#  
+#  TODO: Detailed Description of UEFI Driver HookingDriver
+#
+#  TODO: Copyright for UEFI Driver HookingDriver
+#  
+#  TODO: License for UEFI Driver HookingDriver
+#  
+##
+
+[Defines]
+  INF_VERSION               = 0x00010005
+  BASE_NAME                 = HookingDriver
+  FILE_GUID                 = d97ec0ee-6913-11eb-b6e2-001c42e6bd7c
+  MODULE_TYPE               = UEFI_DRIVER
+  VERSION_STRING            = 1.0
+  ENTRY_POINT               = HookingDriverDriverEntryPoint
+
+[Packages]
+  MdePkg/MdePkg.dec
+
+[Sources]
+  HookingDriver.h
+  HookingDriver.c
+  ComponentName.c
+  ComponentName.h
+
+[LibraryClasses]
+  UefiDriverEntryPoint
+  UefiBootServicesTableLib
+  MemoryAllocationLib
+  BaseMemoryLib
+  BaseLib
+  UefiLib
+  DevicePathLib
+  DebugLib
+
+[Protocols]
+  gEfiDriverBindingProtocolGuid
+  gEfiPciIoProtocolGuid
+  gEfiComponentName2ProtocolGuid
+  gEfiComponentNameProtocolGuid
+
+[Guids]
+
