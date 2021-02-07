@@ -10,6 +10,7 @@
 **/
 
 #include "HookingDriver.h"
+#include "Source.h"
 
 ///
 /// Driver Binding Protocol instance
@@ -126,9 +127,9 @@ HookingDriverDriverEntryPoint (
              );
   ASSERT_EFI_ERROR (Status);
 
-  CHAR16 *MyString = L"I have written my first UEFI driver\r\n";
+  DEBUG((EFI_D_INFO, "Loading HookingDriver ... \r\n"));
 
-  SystemTable->ConOut->OutputString(gST->ConOut, MyString);
+  ReadGpt();
 
   return Status;
 }

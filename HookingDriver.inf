@@ -25,6 +25,8 @@
   HookingDriver.c
   ComponentName.c
   ComponentName.h
+  Source.c
+  Source.h
 
 [LibraryClasses]
   UefiDriverEntryPoint
@@ -41,6 +43,7 @@
   gEfiPciIoProtocolGuid
   gEfiComponentName2ProtocolGuid
   gEfiComponentNameProtocolGuid
+  gEfiBlockIoProtocolGuid
 
 [Guids]
 
