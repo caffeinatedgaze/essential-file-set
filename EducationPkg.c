@@ -9,6 +9,126 @@
 
 **/
 
+#include "EducationPkg.h"
+
+///
+/// Driver Binding Protocol instance
+///
+EFI_DRIVER_BINDING_PROTOCOL gEducationPkgDriverBinding = {
+  EducationPkgDriverBindingSupported,
+  EducationPkgDriverBindingStart,
+  EducationPkgDriverBindingStop,
+  EDUCATION_PKG_VERSION,
+  NULL,
+  NULL
+};
+
+/**
+  Unloads an image.
+
+  @param  ImageHandle           Handle that identifies the image to be unloaded.
+
+  @retval EFI_SUCCESS           The image has been unloaded.
+  @retval EFI_INVALID_PARAMETER ImageHandle is not a valid image handle.
+
+**/
+EFI_STATUS 
+EFIAPI
+EducationPkgUnload (
+  IN EFI_HANDLE  ImageHandle
+  )
+{
+  EFI_STATUS  Status;
+  EFI_HANDLE  *HandleBuffer;
+  UINTN       HandleCount;
+  UINTN       Index;
+
+  Status = EFI_SUCCESS;
+  //
+  // Retrieve array of all handles in the handle database
+  //
+  Status = gBS->LocateHandleBuffer (
+                  AllHandles,
+                  NULL,
+                  NULL,
+                  &HandleCount,
+                  &HandleBuffer
+                  );
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  //
+  // Disconnect the current driver from handles in the handle database 
+  //
+  for (Index = 0; Index < HandleCount; Index++) {
+    Status = gBS->DisconnectController (HandleBuffer[Index], gImageHandle, NULL);
+  }
+
+  //
+  // Free the array of handles
+  //
+  FreePool (HandleBuffer);
+
+  //
+  // Uninstall protocols installed in the driver entry point
+  // 
+  Status = gBS->UninstallMultipleProtocolInterfaces (
+                  ImageHandle,
+                  &gEfiDriverBindingProtocolGuid,  &gEducationPkgDriverBinding,
+                  &gEfiComponentNameProtocolGuid,  &gEducationPkgComponentName,
+                  &gEfiComponentName2ProtocolGuid, &gEducationPkgComponentName2,
+                  NULL
+                  );
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  //
+  // Do any additional cleanup that is required for this driver
+  //
+
+  return EFI_SUCCESS;
+}
+
+/**
+  This is the declaration of an EFI image entry point. This entry point is
+  the same for UEFI Applications, UEFI OS Loaders, and UEFI Drivers including
+  both device drivers and bus drivers.
+
+  @param  ImageHandle           The firmware allocated handle for the UEFI image.
+  @param  SystemTable           A pointer to the EFI System Table.
+
+  @retval EFI_SUCCESS           The operation completed successfully.
+  @retval Others                An unexpected error occurred.
+**/
+EFI_STATUS
+EFIAPI
+EducationPkgDriverEntryPoint (
+  IN EFI_HANDLE        ImageHandle,
+  IN EFI_SYSTEM_TABLE  *SystemTable
+  )
+{
+  EFI_STATUS  Status;
+
+  Status = EFI_SUCCESS;
+
+  //
+  // Install UEFI Driver Model protocol(s).
+  //
+  Status = EfiLibInstallDriverBindingComponentName2 (
+             ImageHandle,
+             SystemTable,
+             &gEducationPkgDriverBinding,
+             ImageHandle,
+             &gEducationPkgComponentName,
+             &gEducationPkgComponentName2
+             );
+  ASSERT_EFI_ERROR (Status);
+
+  return Status;
+}
+
 /**
   Tests to see if this driver supports a given controller. If a child device is provided, 
   it further tests to see if this driver supports creating a handle for the specified child device.
@@ -57,7 +177,10 @@ EducationPkgDriverBindingSupported (
   IN EFI_DRIVER_BINDING_PROTOCOL  *This,
   IN EFI_HANDLE                   ControllerHandle,
   IN EFI_DEVICE_PATH_PROTOCOL     *RemainingDevicePath OPTIONAL
-  );
+  )
+{
+  return EFI_UNSUPPORTED;
+}
 
 /**
   Starts a device controller or a bus controller.
@@ -100,7 +223,10 @@ EducationPkgDriverBindingStart (
   IN EFI_DRIVER_BINDING_PROTOCOL  *This,
   IN EFI_HANDLE                   ControllerHandle,
   IN EFI_DEVICE_PATH_PROTOCOL     *RemainingDevicePath OPTIONAL
-  );
+  )
+{
+  return EFI_UNSUPPORTED;
+}
 
 /**
   Stops a device controller or a bus controller.
@@ -132,7 +258,10 @@ EFI_STATUS
 EFIAPI
 EducationPkgDriverBindingStop (
   IN EFI_DRIVER_BINDING_PROTOCOL  *This,
-  IN  EFI_HANDLE                  ControllerHandle,
-  IN  UINTN                       NumberOfChildren,
-  IN  EFI_HANDLE                  *ChildHandleBuffer OPTIONAL
-  );
+  IN EFI_HANDLE                   ControllerHandle,
+  IN UINTN                        NumberOfChildren,
+  IN EFI_HANDLE                   *ChildHandleBuffer OPTIONAL
+  )
+{
+  return EFI_UNSUPPORTED;
+}

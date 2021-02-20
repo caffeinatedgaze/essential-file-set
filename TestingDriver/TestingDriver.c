@@ -1,13 +1,168 @@
 /** @file
-  TODO: Brief Description of UEFI Driver EducationPkg
+  TODO: Brief Description of UEFI Driver TestingDriver
   
-  TODO: Detailed Description of UEFI Driver EducationPkg
+  TODO: Detailed Description of UEFI Driver TestingDriver
 
-  TODO: Copyright for UEFI Driver EducationPkg
+  TODO: Copyright for UEFI Driver TestingDriver
   
-  TODO: License for UEFI Driver EducationPkg
+  TODO: License for UEFI Driver TestingDriver
 
 **/
+
+#include "TestingDriver.h"
+#include "TestingSource.h"
+
+
+
+///
+/// Driver Binding Protocol instance
+///
+EFI_DRIVER_BINDING_PROTOCOL gTestingDriverDriverBinding = {
+  TestingDriverDriverBindingSupported,
+  TestingDriverDriverBindingStart,
+  TestingDriverDriverBindingStop,
+  TESTING_DRIVER_VERSION,
+  NULL,
+  NULL
+};
+
+/**
+  Unloads an image.
+
+  @param  ImageHandle           Handle that identifies the image to be unloaded.
+
+  @retval EFI_SUCCESS           The image has been unloaded.
+  @retval EFI_INVALID_PARAMETER ImageHandle is not a valid image handle.
+
+**/
+EFI_STATUS 
+EFIAPI
+TestingDriverUnload (
+  IN EFI_HANDLE  ImageHandle
+  )
+{
+  EFI_STATUS  Status;
+  EFI_HANDLE  *HandleBuffer;
+  UINTN       HandleCount;
+  UINTN       Index;
+
+  Status = EFI_SUCCESS;
+  //
+  // Retrieve array of all handles in the handle database
+  //
+  Status = gBS->LocateHandleBuffer (
+                  AllHandles,
+                  NULL,
+                  NULL,
+                  &HandleCount,
+                  &HandleBuffer
+                  );
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  //
+  // Disconnect the current driver from handles in the handle database 
+  //
+  for (Index = 0; Index < HandleCount; Index++) {
+    Status = gBS->DisconnectController (HandleBuffer[Index], gImageHandle, NULL);
+  }
+
+  //
+  // Free the array of handles
+  //
+  FreePool (HandleBuffer);
+
+  //
+  // Uninstall protocols installed in the driver entry point
+  // 
+  Status = gBS->UninstallMultipleProtocolInterfaces (
+                  ImageHandle,
+                  &gEfiDriverBindingProtocolGuid,  &gTestingDriverDriverBinding,
+                  &gEfiComponentNameProtocolGuid,  &gTestingDriverComponentName,
+                  &gEfiComponentName2ProtocolGuid, &gTestingDriverComponentName2,
+                  NULL
+                  );
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  //
+  // Do any additional cleanup that is required for this driver
+  //
+
+  return EFI_SUCCESS;
+}
+
+/**
+  This is the declaration of an EFI image entry point. This entry point is
+  the same for UEFI Applications, UEFI OS Loaders, and UEFI Drivers including
+  both device drivers and bus drivers.
+
+  @param  ImageHandle           The firmware allocated handle for the UEFI image.
+  @param  SystemTable           A pointer to the EFI System Table.
+
+  @retval EFI_SUCCESS           The operation completed successfully.
+  @retval Others                An unexpected error occurred.
+**/
+EFI_STATUS
+EFIAPI
+TestingDriverDriverEntryPoint (
+  IN EFI_HANDLE        ImageHandle,
+  IN EFI_SYSTEM_TABLE  *SystemTable
+  )
+{
+  EFI_STATUS  Status;
+
+  Status = EFI_SUCCESS;
+
+  //
+  // Install UEFI Driver Model protocol(s).
+  //
+  Status = EfiLibInstallDriverBindingComponentName2 (
+             ImageHandle,
+             SystemTable,
+             &gTestingDriverDriverBinding,
+             ImageHandle,
+             &gTestingDriverComponentName,
+             &gTestingDriverComponentName2
+             );
+  ASSERT_EFI_ERROR (Status);
+
+  // EFI_BLOCK_IO_PROTOCOL *fsProto = NULL;
+  // gEfiBlockIoProtocolGuid = EFI_BLOCK_IO_PROTOCOL_GUID;
+  // Status = gBS->LocateProtocol(&gEfiBlockIoProtocolGuid, NULL, (VOID**)&fsProto);
+  // ASSERT_EFI_ERROR (Status);
+
+  // CHAR16 buffer[4] = { 0 };
+
+  CHAR16 path[] = L"\\example.txt";
+  EFI_FILE_PROTOCOL* file = NULL;
+  EFI_FILE_PROTOCOL* volume = NULL;
+
+  //
+  //  Open file
+  //
+  EFI_STATUS status = OpenVolume(&volume);
+
+  if (EFI_ERROR(status))
+  {
+    return status;
+  }
+
+  Status = OpenFile(volume, &file, path);
+
+  if (EFI_ERROR(status))
+  {
+    CloseFile(volume);
+    return status;
+  }
+
+  CloseFile(file);
+  CloseFile(volume);
+
+  return Status;
+}
 
 /**
   Tests to see if this driver supports a given controller. If a child device is provided, 
@@ -53,11 +208,14 @@
 **/
 EFI_STATUS
 EFIAPI
-EducationPkgDriverBindingSupported (
+TestingDriverDriverBindingSupported (
   IN EFI_DRIVER_BINDING_PROTOCOL  *This,
   IN EFI_HANDLE                   ControllerHandle,
   IN EFI_DEVICE_PATH_PROTOCOL     *RemainingDevicePath OPTIONAL
-  );
+  )
+{
+  return EFI_UNSUPPORTED;
+}
 
 /**
   Starts a device controller or a bus controller.
@@ -96,11 +254,14 @@ EducationPkgDriverBindingSupported (
 **/
 EFI_STATUS
 EFIAPI
-EducationPkgDriverBindingStart (
+TestingDriverDriverBindingStart (
   IN EFI_DRIVER_BINDING_PROTOCOL  *This,
   IN EFI_HANDLE                   ControllerHandle,
   IN EFI_DEVICE_PATH_PROTOCOL     *RemainingDevicePath OPTIONAL
-  );
+  )
+{
+  return EFI_UNSUPPORTED;
+}
 
 /**
   Stops a device controller or a bus controller.
@@ -130,9 +291,12 @@ EducationPkgDriverBindingStart (
 **/
 EFI_STATUS
 EFIAPI
-EducationPkgDriverBindingStop (
+TestingDriverDriverBindingStop (
   IN EFI_DRIVER_BINDING_PROTOCOL  *This,
-  IN  EFI_HANDLE                  ControllerHandle,
-  IN  UINTN                       NumberOfChildren,
-  IN  EFI_HANDLE                  *ChildHandleBuffer OPTIONAL
-  );
+  IN EFI_HANDLE                   ControllerHandle,
+  IN UINTN                        NumberOfChildren,
+  IN EFI_HANDLE                   *ChildHandleBuffer OPTIONAL
+  )
+{
+  return EFI_UNSUPPORTED;
+}

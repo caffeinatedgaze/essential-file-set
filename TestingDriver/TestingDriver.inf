@@ -1,0 +1,49 @@
+## @file
+#  TODO: Brief Description of UEFI Driver TestingDriver
+#  
+#  TODO: Detailed Description of UEFI Driver TestingDriver
+#
+#  TODO: Copyright for UEFI Driver TestingDriver
+#  
+#  TODO: License for UEFI Driver TestingDriver
+#  
+##
+
+[Defines]
+  INF_VERSION               = 0x00010005
+  BASE_NAME                 = TestingDriver
+  FILE_GUID                 = 800915ae-706c-11eb-a438-001c42e6bd7c
+  MODULE_TYPE               = UEFI_DRIVER
+  VERSION_STRING            = 1
+  ENTRY_POINT               = TestingDriverDriverEntryPoint
+
+[Packages]
+  MdePkg/MdePkg.dec
+
+[Sources]
+  TestingDriver.h
+  TestingDriver.c
+  TestingSource.h
+  TestingSource.c
+  TestingComponentName.c
+  TestingComponentName.h
+
+[LibraryClasses]
+  UefiDriverEntryPoint
+  UefiBootServicesTableLib
+  MemoryAllocationLib
+  BaseMemoryLib
+  BaseLib
+  UefiLib
+  DevicePathLib
+  DebugLib
+
+[Protocols]
+  gEfiDriverBindingProtocolGuid
+  gEfiPciIoProtocolGuid
+  gEfiComponentName2ProtocolGuid
+  gEfiComponentNameProtocolGuid
+  gEfiSimpleFileSystemProtocolGuid
+
+[Guids]
+

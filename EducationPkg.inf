@@ -1,0 +1,46 @@
+## @file
+#  TODO: Brief Description of UEFI Driver EducationPkg
+#  
+#  TODO: Detailed Description of UEFI Driver EducationPkg
+#
+#  TODO: Copyright for UEFI Driver EducationPkg
+#  
+#  TODO: License for UEFI Driver EducationPkg
+#  
+##
+
+[Defines]
+  INF_VERSION               = 0x00010005
+  BASE_NAME                 = EducationPkg
+  FILE_GUID                 = 1ed14640-6fb4-11eb-afb2-001c42e6bd7c
+  MODULE_TYPE               = UEFI_DRIVER
+  VERSION_STRING            = 1
+  ENTRY_POINT               = EducationPkgDriverEntryPoint
+
+[Packages]
+  MdePkg/MdePkg.dec
+
+[Sources]
+  EducationPkg.h
+  EducationPkg.c
+  ComponentName.c
+  ComponentName.h
+
+[LibraryClasses]
+  UefiDriverEntryPoint
+  UefiBootServicesTableLib
+  MemoryAllocationLib
+  BaseMemoryLib
+  BaseLib
+  UefiLib
+  DevicePathLib
+  DebugLib
+
+[Protocols]
+  gEfiDriverBindingProtocolGuid
+  gEfiPciIoProtocolGuid
+  gEfiComponentName2ProtocolGuid
+  gEfiComponentNameProtocolGuid
+
+[Guids]
+

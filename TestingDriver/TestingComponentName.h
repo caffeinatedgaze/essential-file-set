@@ -1,44 +1,13 @@
 /** @file
-  TODO: Brief Description of UEFI Driver EducationPkg
+  TODO: Brief Description of UEFI Driver TestingDriver
   
-  TODO: Detailed Description of UEFI Driver EducationPkg
+  TODO: Detailed Description of UEFI Driver TestingDriver
 
-  TODO: Copyright for UEFI Driver EducationPkg
+  TODO: Copyright for UEFI Driver TestingDriver
   
-  TODO: License for UEFI Driver EducationPkg
+  TODO: License for UEFI Driver TestingDriver
 
 **/
-
-#include "EducationPkg.h"
-
-///
-/// Component Name Protocol instance
-///
-GLOBAL_REMOVE_IF_UNREFERENCED 
-EFI_COMPONENT_NAME_PROTOCOL  gEducationPkgComponentName = {
-  (EFI_COMPONENT_NAME_GET_DRIVER_NAME)    EducationPkgComponentNameGetDriverName,
-  (EFI_COMPONENT_NAME_GET_CONTROLLER_NAME)EducationPkgComponentNameGetControllerName,
-  "eng"
-};
-
-///
-/// Component Name 2 Protocol instance
-///
-GLOBAL_REMOVE_IF_UNREFERENCED 
-EFI_COMPONENT_NAME2_PROTOCOL  gEducationPkgComponentName2 = {
-  EducationPkgComponentNameGetDriverName,
-  EducationPkgComponentNameGetControllerName,
-  "en"
-};
-
-///
-/// Table of driver names
-///
-GLOBAL_REMOVE_IF_UNREFERENCED 
-EFI_UNICODE_STRING_TABLE mEducationPkgDriverNameTable[] = {
-  { "eng;en", (CHAR16 *)L"EducationPkg" },
-  { NULL, NULL }
-};
 
 /**
   Retrieves a Unicode string that is the user-readable name of the EFI Driver.
@@ -64,20 +33,11 @@ EFI_UNICODE_STRING_TABLE mEducationPkgDriverNameTable[] = {
 **/
 EFI_STATUS
 EFIAPI
-EducationPkgComponentNameGetDriverName (
+TestingDriverComponentNameGetDriverName (
   IN EFI_COMPONENT_NAME2_PROTOCOL  *This,
   IN  CHAR8                        *Language,
   OUT CHAR16                       **DriverName
-  )
-{
-  return LookupUnicodeString2 (
-           Language,
-           This->SupportedLanguages,
-           mEducationPkgDriverNameTable,
-           DriverName,
-           (BOOLEAN)(This != &gEducationPkgComponentName2)
-           );
-}
+  );
 
 /**
   Retrieves a Unicode string that is the user readable name of the controller
@@ -121,37 +81,10 @@ EducationPkgComponentNameGetDriverName (
 **/
 EFI_STATUS
 EFIAPI
-EducationPkgComponentNameGetControllerName (
+TestingDriverComponentNameGetControllerName (
   IN  EFI_COMPONENT_NAME2_PROTOCOL  *This,
   IN  EFI_HANDLE                    ControllerHandle,
   IN  EFI_HANDLE                    ChildHandle        OPTIONAL,
   IN  CHAR8                         *Language,
   OUT CHAR16                        **ControllerName
-  )
-{
-  EFI_STATUS  Status;
-  //
-  // ChildHandle must be NULL for a Device Driver
-  //
-  if (ChildHandle != NULL) {
-    return EFI_UNSUPPORTED;
-  }
-
-  //
-  // Make sure this driver is currently managing ControllerHandle
-  //
-  Status = EfiTestManagedDevice (
-             ControllerHandle,
-             gEducationPkgDriverBinding.DriverBindingHandle,
-             &gEfiPciIoProtocolGuid
-             );
-  if (EFI_ERROR (Status)) {
-    return Status;
-  }
-
-  //
-  // Lookup name of controller specified by ControllerHandle
-  //
-  Status = EFI_UNSUPPORTED;
-  return Status;
-}
+  );

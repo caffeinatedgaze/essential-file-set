@@ -1,11 +1,11 @@
 /** @file
-  TODO: Brief Description of UEFI Driver EducationPkg
+  TODO: Brief Description of UEFI Driver HookingDriver
   
-  TODO: Detailed Description of UEFI Driver EducationPkg
+  TODO: Detailed Description of UEFI Driver HookingDriver
 
-  TODO: Copyright for UEFI Driver EducationPkg
+  TODO: Copyright for UEFI Driver HookingDriver
   
-  TODO: License for UEFI Driver EducationPkg
+  TODO: License for UEFI Driver HookingDriver
 
 **/
 
@@ -53,7 +53,7 @@
 **/
 EFI_STATUS
 EFIAPI
-EducationPkgDriverBindingSupported (
+HookingDriverDriverBindingSupported (
   IN EFI_DRIVER_BINDING_PROTOCOL  *This,
   IN EFI_HANDLE                   ControllerHandle,
   IN EFI_DEVICE_PATH_PROTOCOL     *RemainingDevicePath OPTIONAL
@@ -96,7 +96,7 @@ EducationPkgDriverBindingSupported (
 **/
 EFI_STATUS
 EFIAPI
-EducationPkgDriverBindingStart (
+HookingDriverDriverBindingStart (
   IN EFI_DRIVER_BINDING_PROTOCOL  *This,
   IN EFI_HANDLE                   ControllerHandle,
   IN EFI_DEVICE_PATH_PROTOCOL     *RemainingDevicePath OPTIONAL
@@ -130,7 +130,7 @@ EducationPkgDriverBindingStart (
 **/
 EFI_STATUS
 EFIAPI
-EducationPkgDriverBindingStop (
+HookingDriverDriverBindingStop (
   IN EFI_DRIVER_BINDING_PROTOCOL  *This,
   IN  EFI_HANDLE                  ControllerHandle,
   IN  UINTN                       NumberOfChildren,

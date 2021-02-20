@@ -1,23 +1,23 @@
 /** @file
-  TODO: Brief Description of UEFI Driver EducationPkg
+  TODO: Brief Description of UEFI Driver TestingDriver
   
-  TODO: Detailed Description of UEFI Driver EducationPkg
+  TODO: Detailed Description of UEFI Driver TestingDriver
 
-  TODO: Copyright for UEFI Driver EducationPkg
+  TODO: Copyright for UEFI Driver TestingDriver
   
-  TODO: License for UEFI Driver EducationPkg
+  TODO: License for UEFI Driver TestingDriver
 
 **/
 
-#include "EducationPkg.h"
+#include "TestingDriver.h"
 
 ///
 /// Component Name Protocol instance
 ///
 GLOBAL_REMOVE_IF_UNREFERENCED 
-EFI_COMPONENT_NAME_PROTOCOL  gEducationPkgComponentName = {
-  (EFI_COMPONENT_NAME_GET_DRIVER_NAME)    EducationPkgComponentNameGetDriverName,
-  (EFI_COMPONENT_NAME_GET_CONTROLLER_NAME)EducationPkgComponentNameGetControllerName,
+EFI_COMPONENT_NAME_PROTOCOL  gTestingDriverComponentName = {
+  (EFI_COMPONENT_NAME_GET_DRIVER_NAME)    TestingDriverComponentNameGetDriverName,
+  (EFI_COMPONENT_NAME_GET_CONTROLLER_NAME)TestingDriverComponentNameGetControllerName,
   "eng"
 };
 
@@ -25,9 +25,9 @@ EFI_COMPONENT_NAME_PROTOCOL  gEducationPkgComponentName = {
 /// Component Name 2 Protocol instance
 ///
 GLOBAL_REMOVE_IF_UNREFERENCED 
-EFI_COMPONENT_NAME2_PROTOCOL  gEducationPkgComponentName2 = {
-  EducationPkgComponentNameGetDriverName,
-  EducationPkgComponentNameGetControllerName,
+EFI_COMPONENT_NAME2_PROTOCOL  gTestingDriverComponentName2 = {
+  TestingDriverComponentNameGetDriverName,
+  TestingDriverComponentNameGetControllerName,
   "en"
 };
 
@@ -35,8 +35,8 @@ EFI_COMPONENT_NAME2_PROTOCOL  gEducationPkgComponentName2 = {
 /// Table of driver names
 ///
 GLOBAL_REMOVE_IF_UNREFERENCED 
-EFI_UNICODE_STRING_TABLE mEducationPkgDriverNameTable[] = {
-  { "eng;en", (CHAR16 *)L"EducationPkg" },
+EFI_UNICODE_STRING_TABLE mTestingDriverDriverNameTable[] = {
+  { "eng;en", (CHAR16 *)L"TestingDriver" },
   { NULL, NULL }
 };
 
@@ -64,7 +64,7 @@ EFI_UNICODE_STRING_TABLE mEducationPkgDriverNameTable[] = {
 **/
 EFI_STATUS
 EFIAPI
-EducationPkgComponentNameGetDriverName (
+TestingDriverComponentNameGetDriverName (
   IN EFI_COMPONENT_NAME2_PROTOCOL  *This,
   IN  CHAR8                        *Language,
   OUT CHAR16                       **DriverName
@@ -73,9 +73,9 @@ EducationPkgComponentNameGetDriverName (
   return LookupUnicodeString2 (
            Language,
            This->SupportedLanguages,
-           mEducationPkgDriverNameTable,
+           mTestingDriverDriverNameTable,
            DriverName,
-           (BOOLEAN)(This != &gEducationPkgComponentName2)
+           (BOOLEAN)(This != &gTestingDriverComponentName2)
            );
 }
 
@@ -121,7 +121,7 @@ EducationPkgComponentNameGetDriverName (
 **/
 EFI_STATUS
 EFIAPI
-EducationPkgComponentNameGetControllerName (
+TestingDriverComponentNameGetControllerName (
   IN  EFI_COMPONENT_NAME2_PROTOCOL  *This,
   IN  EFI_HANDLE                    ControllerHandle,
   IN  EFI_HANDLE                    ChildHandle        OPTIONAL,
@@ -142,7 +142,7 @@ EducationPkgComponentNameGetControllerName (
   //
   Status = EfiTestManagedDevice (
              ControllerHandle,
-             gEducationPkgDriverBinding.DriverBindingHandle,
+             gTestingDriverDriverBinding.DriverBindingHandle,
              &gEfiPciIoProtocolGuid
              );
   if (EFI_ERROR (Status)) {

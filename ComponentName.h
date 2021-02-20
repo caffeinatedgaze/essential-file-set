@@ -1,11 +1,11 @@
 /** @file
-  TODO: Brief Description of UEFI Driver HookingDriver
+  TODO: Brief Description of UEFI Driver EducationPkg
   
-  TODO: Detailed Description of UEFI Driver HookingDriver
+  TODO: Detailed Description of UEFI Driver EducationPkg
 
-  TODO: Copyright for UEFI Driver HookingDriver
+  TODO: Copyright for UEFI Driver EducationPkg
   
-  TODO: License for UEFI Driver HookingDriver
+  TODO: License for UEFI Driver EducationPkg
 
 **/
 
@@ -33,7 +33,7 @@
 **/
 EFI_STATUS
 EFIAPI
-HookingDriverComponentNameGetDriverName (
+EducationPkgComponentNameGetDriverName (
   IN EFI_COMPONENT_NAME2_PROTOCOL  *This,
   IN  CHAR8                        *Language,
   OUT CHAR16                       **DriverName
@@ -81,7 +81,7 @@ HookingDriverComponentNameGetDriverName (
 **/
 EFI_STATUS
 EFIAPI
-HookingDriverComponentNameGetControllerName (
+EducationPkgComponentNameGetControllerName (
   IN  EFI_COMPONENT_NAME2_PROTOCOL  *This,
   IN  EFI_HANDLE                    ControllerHandle,
   IN  EFI_HANDLE                    ChildHandle        OPTIONAL,
