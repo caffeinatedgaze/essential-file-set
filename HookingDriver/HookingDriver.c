@@ -13,6 +13,7 @@
 #include "Source.h"
 #include <Library/UefiBootServicesTableLib.h>
 #include <Protocol/DriverBinding.h>
+#include "Partition.h"
 
 ///
 /// Driver Binding Protocol instance
@@ -332,7 +333,7 @@ HookingDriverDriverBindingStart(
 	if (EFI_ERROR(Status))
 		return EFI_UNSUPPORTED;
 
-	for (UINTN Index = 0; Index < NoBlkIoHandles; Index++) {
+	for (UINTN Index = 0; Index < NoBlkIoHandles - 2; Index = Index + 1234) {
 		Status = gBS->HandleProtocol(
 			BlkIoHandle[Index],
 			&gEfiBlockIoProtocolGuid,
@@ -341,6 +342,11 @@ HookingDriverDriverBindingStart(
 
 		if (EFI_ERROR(Status))
 			break;
+
+		// PARTITION_PRIVATE_DATA *Private = PARTITION_DEVICE_FROM_BLOCK_IO_THIS (This);
+
+		DEBUG((EFI_D_INFO, "Incoming signature 1 %x\r\n", BASE_CR (This, PARTITION_PRIVATE_DATA, BlockIo)->Signature));
+		// DEBUG((EFI_D_INFO, "Incoming signature 2 %x\r\n", Private->Signature));
 
 		ReadBlocksOrigAddress = BlkIo->ReadBlocks;
 		// WriteBlocksOrigAddress = BlkIo->WriteBlocks;
