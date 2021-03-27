@@ -333,7 +333,7 @@ HookingDriverDriverBindingStart(
 	if (EFI_ERROR(Status))
 		return EFI_UNSUPPORTED;
 
-	for (UINTN Index = 0; Index < NoBlkIoHandles - 2; Index = Index + 1234) {
+	for (UINTN Index = 0; Index < NoBlkIoHandles; Index++) {
 		Status = gBS->HandleProtocol(
 			BlkIoHandle[Index],
 			&gEfiBlockIoProtocolGuid,
@@ -343,10 +343,16 @@ HookingDriverDriverBindingStart(
 		if (EFI_ERROR(Status))
 			break;
 
+		if (BlkIo->Media->LogicalPartition)
+			continue;
+
 		// PARTITION_PRIVATE_DATA *Private = PARTITION_DEVICE_FROM_BLOCK_IO_THIS (This);
 
 		DEBUG((EFI_D_INFO, "Incoming signature 1 %x\r\n", BASE_CR (This, PARTITION_PRIVATE_DATA, BlockIo)->Signature));
 		// DEBUG((EFI_D_INFO, "Incoming signature 2 %x\r\n", Private->Signature));
+
+		if (ReadBlocksRandomStaff == BlkIo->ReadBlocks)
+			continue;
 
 		ReadBlocksOrigAddress = BlkIo->ReadBlocks;
 		// WriteBlocksOrigAddress = BlkIo->WriteBlocks;
