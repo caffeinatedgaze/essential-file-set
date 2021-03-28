@@ -5,9 +5,7 @@
 
 
 EFI_STATUS
-OpenVolume(
-	OUT EFI_FILE_PROTOCOL** Volume
-);
+MyReadBlocks();
 
 EFI_STATUS
 OpenFile(

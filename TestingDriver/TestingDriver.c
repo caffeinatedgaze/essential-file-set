@@ -129,37 +129,11 @@ TestingDriverDriverEntryPoint (
              );
   ASSERT_EFI_ERROR (Status);
 
-  // EFI_BLOCK_IO_PROTOCOL *fsProto = NULL;
-  // gEfiBlockIoProtocolGuid = EFI_BLOCK_IO_PROTOCOL_GUID;
-  // Status = gBS->LocateProtocol(&gEfiBlockIoProtocolGuid, NULL, (VOID**)&fsProto);
-  // ASSERT_EFI_ERROR (Status);
+  // todo: ReadBlocks from anywhere
 
-  // CHAR16 buffer[4] = { 0 };
+  DEBUG((EFI_D_INFO, "TestSource.c: Entrypoint here ... \r\n"));
 
-  CHAR16 path[] = L"\\example.txt";
-  EFI_FILE_PROTOCOL* file = NULL;
-  EFI_FILE_PROTOCOL* volume = NULL;
-
-  //
-  //  Open file
-  //
-  EFI_STATUS status = OpenVolume(&volume);
-
-  if (EFI_ERROR(status))
-  {
-    return status;
-  }
-
-  Status = OpenFile(volume, &file, path);
-
-  if (EFI_ERROR(status))
-  {
-    CloseFile(volume);
-    return status;
-  }
-
-  CloseFile(file);
-  CloseFile(volume);
+  MyReadBlocks();
 
   return Status;
 }

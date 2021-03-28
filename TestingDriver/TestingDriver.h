@@ -31,6 +31,7 @@
 #include <Protocol/DriverBinding.h>
 #include <Protocol/ComponentName2.h>
 #include <Protocol/ComponentName.h>
+#include <Protocol/BlockIo.h>
 
 //
 // Consumed Protocols

@@ -248,7 +248,7 @@ ReadBlocksRandomStaff(
 	OUT VOID*                 Buffer
 )
 {
-	DEBUG((EFI_D_INFO, "Jesus, I'm reading blocks random staff! <INSIDE>\r\n"));
+	DEBUG((EFI_D_INFO, "Jesus, I'm reading blocks random staff! <INSIDE>, arg list: %x %x %x\r\n", MediaId, Lba, BufferSize));
 	return ReadBlocksOrigAddress(This, MediaId, Lba, BufferSize, Buffer);
 }
 
@@ -268,7 +268,7 @@ WriteBlocksRandomStaff(
 	//if (0 != StrCmp(Buffer, MyString)) 
 	//	gST->ConOut->OutputString(gST->ConOut, MyString);
 
-	DEBUG((EFI_D_INFO, "Jesus, I'm inside! <INSIDE>\r\n"));
+	DEBUG((EFI_D_INFO, "Jesus, I'm writing blocks random staff! <INSIDE>\r\n"));
 
 	return WriteBlocksOrigAddress(This, MediaId, Lba, BufferSize, Buffer);
 }
@@ -355,12 +355,11 @@ HookingDriverDriverBindingStart(
 			continue;
 
 		ReadBlocksOrigAddress = BlkIo->ReadBlocks;
-		// WriteBlocksOrigAddress = BlkIo->WriteBlocks;
+		WriteBlocksOrigAddress = BlkIo->WriteBlocks;
 
-		// BlkIo->WriteBlocks = NULL; // WriteBlocksRandomStaff;
 		BlkIo->ReadBlocks = ReadBlocksRandomStaff;
-		// ReadBlocksOrigAddress = BlkIo->ReadBlocks;
-		// BlkIo->ReadBlocks = ReadBlocksRandomStaff; // WriteBlocksRandomStaff;
+		BlkIo->WriteBlocks = WriteBlocksRandomStaff; // WriteBlocksRandomStaff;
+
 		DEBUG((EFI_D_INFO, "Performing right hook <HOOK>\r\n"));
 	}
 

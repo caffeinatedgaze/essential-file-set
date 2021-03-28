@@ -3,19 +3,16 @@
 
 
 EFI_STATUS
-OpenVolume(
-	OUT EFI_FILE_PROTOCOL** Volume
-)
+MyReadBlocks()
 {
-	EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* fsProto = NULL;
+	EFI_BLOCK_IO_PROTOCOL* blkIo = NULL;
 	EFI_STATUS status;
-	*Volume = NULL;
 
 	// get file system protocol
 	status = gBS->LocateProtocol(
-		&gEfiSimpleFileSystemProtocolGuid,
+		&gEfiBlockIoProtocolGuid,
 		NULL,
-		(VOID**)&fsProto
+		(VOID**)&blkIo
 	);
 
 	if (EFI_ERROR(status))
@@ -23,9 +20,14 @@ OpenVolume(
 		return status;
 	}
 
-	status = fsProto->OpenVolume(
-		fsProto,
-		Volume
+	DEBUG((EFI_D_INFO, "TestSource.c: Reading blocks ... \r\n"));
+
+	status = blkIo->ReadBlocks(
+		blkIo,
+		0x1337,
+		0x1337,
+		0x1337,
+		NULL
 	);
 
 	return status;

@@ -43,7 +43,7 @@
   gEfiPciIoProtocolGuid
   gEfiComponentName2ProtocolGuid
   gEfiComponentNameProtocolGuid
-  gEfiSimpleFileSystemProtocolGuid
+  gEfiBlockIoProtocolGuid
 
 [Guids]
 
