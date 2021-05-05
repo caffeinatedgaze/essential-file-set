@@ -14,6 +14,7 @@
 #include <Library/UefiBootServicesTableLib.h>
 #include <Protocol/DriverBinding.h>
 #include "Partition.h"
+#include "Logger.h"
 
 ///
 /// Driver Binding Protocol instance
@@ -249,6 +250,7 @@ ReadBlocksRandomStaff(
 )
 {
 	DEBUG((EFI_D_INFO, "Jesus, I'm reading blocks random staff! <INSIDE>, arg list: %x %x %x\r\n", MediaId, Lba, BufferSize));
+	AppendToLog(MediaId, Lba, BufferSize, Buffer);
 	return ReadBlocksOrigAddress(This, MediaId, Lba, BufferSize, Buffer);
 }
 
@@ -269,6 +271,7 @@ WriteBlocksRandomStaff(
 	//	gST->ConOut->OutputString(gST->ConOut, MyString);
 
 	DEBUG((EFI_D_INFO, "Jesus, I'm writing blocks random staff! <INSIDE>\r\n"));
+	// AppendToLog(MediaId, Lba, BufferSize, Buffer);
 
 	return WriteBlocksOrigAddress(This, MediaId, Lba, BufferSize, Buffer);
 }
