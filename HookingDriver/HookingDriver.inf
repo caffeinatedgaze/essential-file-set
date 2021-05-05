@@ -25,8 +25,8 @@
   HookingDriver.c
   ComponentName.c
   ComponentName.h
-  Source.c
-  Source.h
+  Logger.c
+  Logger.h
 
 [LibraryClasses]
   UefiDriverEntryPoint
@@ -44,6 +44,8 @@
   gEfiComponentName2ProtocolGuid
   gEfiComponentNameProtocolGuid
   gEfiBlockIoProtocolGuid
+  gEfiSimpleFileSystemProtocolGuid
 
 [Guids]
+  gEfiFileInfoGuid
 
