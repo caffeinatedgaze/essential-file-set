@@ -15,50 +15,101 @@ AppendToLog(
 	DEBUG((EFI_D_INFO, "Appending to log ... \r\n"));
 
 	EFI_STATUS status = 0;
+	EFI_FILE_PROTOCOL *Fs;
+	EFI_FILE_PROTOCOL *File = NULL;
+	CHAR16 FileName[] = L"AAAMyLogFile.txt"; // 0-terminated 8.3 file name
 
-	EFI_GUID fsProtocolGuid = SIMPLE_FILE_SYSTEM_PROTOCOL;
-	UINTN  handleCount = 0;
-	EFI_HANDLE *handles = NULL;
 
-	status = gBS->LocateHandleBuffer(
-		ByProtocol,
-		&fsProtocolGuid,
-		NULL,
-		&handleCount,
-		&handles
-	);
+	// Find writable FS
+	status = FindWritableFs(&Fs);
 
-	for (UINT16 i = 0; i < handleCount; ++i) {
-		EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* fs = NULL;
-
-		status = gBS->HandleProtocol(handles[i], &fsProtocolGuid, (VOID**)&fs);
-
-		EFI_FILE_PROTOCOL *root = NULL;
-		status = fs->OpenVolume(fs, &root);
-
-		if (EFI_ERROR(status)) {
-			return status;
-		}
-
-		EFI_FILE_PROTOCOL *token = NULL;
-		status = root->Open(
-			root,
-			&token,
-			L"AAAMyLog.txt",
-			EFI_FILE_MODE_CREATE,
-			0
-		);
-
-		if (EFI_ERROR(status)) {
-			return status;
-		}
-
-		token->Close(token);
+	if (EFI_ERROR(status)) {
+		DEBUG((EFI_D_ERROR, "AppendToLog: Can't find writable FS\n"));
+		return EFI_SUCCESS;
 	}
 
-	// todo: write to file something
+	// Open or create output file
+	status = Fs->Open(Fs, &File, FileName, EFI_FILE_MODE_CREATE | EFI_FILE_MODE_READ | EFI_FILE_MODE_WRITE, 0);
+	if (EFI_ERROR(status)) {
+		DEBUG((EFI_D_ERROR, "AppendToLog: Fs->Open of %s returned %r\n", FileName, status));
+		return status;
+	}
+
+	CHAR16 message[] = L"Hello from UEFI driver";
+
+	status = WriteDataToFile(
+		message,
+		sizeof(message),
+		File
+	);
+
+	if (EFI_ERROR(status)) {
+		DEBUG((EFI_D_ERROR, "AppendToLog: WriteDataToFile of %s returned %r\n", message, status));
+		return status;
+	}
+
+	//  flush unwritten data
+	File->Flush(File);
+	//  close file
+	File->Close(File);
 
 	return EFI_SUCCESS;
+}
+
+EFI_STATUS
+EFIAPI
+FindWritableFs(
+	OUT EFI_FILE_PROTOCOL **WritableFs
+)
+{
+	EFI_HANDLE *HandleBuffer = NULL;
+	UINTN      HandleCount;
+	UINTN      i;
+
+	// Locate all the simple file system devices in the system
+	EFI_STATUS Status = gBS->LocateHandleBuffer(ByProtocol, &gEfiSimpleFileSystemProtocolGuid, NULL, &HandleCount, &HandleBuffer);
+	if (!EFI_ERROR(Status)) {
+		EFI_FILE_PROTOCOL *Fs = NULL;
+		// For each located volume
+		for (i = 0; i < HandleCount; i++) {
+			EFI_SIMPLE_FILE_SYSTEM_PROTOCOL *SimpleFs = NULL;
+			EFI_FILE_PROTOCOL *File = NULL;
+
+			// Get protocol pointer for current volume
+			Status = gBS->HandleProtocol(HandleBuffer[i], &gEfiSimpleFileSystemProtocolGuid, (VOID **)&SimpleFs);
+			if (EFI_ERROR(Status)) {
+				DEBUG((EFI_D_ERROR, "FindWritableFs: gBS->HandleProtocol[%d] returned %r\n", i, Status));
+				continue;
+			}
+
+			// Open the volume
+			Status = SimpleFs->OpenVolume(SimpleFs, &Fs);
+			if (EFI_ERROR(Status)) {
+				DEBUG((EFI_D_ERROR, "FindWritableFs: SimpleFs->OpenVolume[%d] returned %r\n", i, Status));
+				continue;
+			}
+
+			// Try opening a file for writing
+			Status = Fs->Open(Fs, &File, L"crsdtest.fil", EFI_FILE_MODE_CREATE | EFI_FILE_MODE_READ | EFI_FILE_MODE_WRITE, 0);
+			if (EFI_ERROR(Status)) {
+				DEBUG((EFI_D_ERROR, "FindWritableFs: Fs->Open[%d] returned %r\n", i, Status));
+				continue;
+			}
+
+			// Writable FS found
+			Fs->Delete(File);
+			*WritableFs = Fs;
+			Status = EFI_SUCCESS;
+			break;
+		}
+	}
+
+	// Free memory
+	if (HandleBuffer) {
+		gBS->FreePool(HandleBuffer);
+	}
+
+	return Status;
 }
 
 EFI_STATUS
@@ -143,38 +194,38 @@ FINALLY:
 
 EFI_STATUS
 OpenFile(
-  IN  EFI_FILE_PROTOCOL* Volume,
-  OUT EFI_FILE_PROTOCOL** File,
-  IN  CHAR16* Path
+	IN  EFI_FILE_PROTOCOL* Volume,
+	OUT EFI_FILE_PROTOCOL** File,
+	IN  CHAR16* Path
 )
 {
-  EFI_STATUS status;
-  *File = NULL;
+	EFI_STATUS status;
+	*File = NULL;
 
-  //  from root file we open file specified by path
-  status = Volume->Open(
-    Volume,
-    File,
-    Path,
-    EFI_FILE_MODE_CREATE |
-    EFI_FILE_MODE_WRITE |
-    EFI_FILE_MODE_READ,
-    0
-  );
+	//  from root file we open file specified by path
+	status = Volume->Open(
+		Volume,
+		File,
+		Path,
+		EFI_FILE_MODE_CREATE |
+		EFI_FILE_MODE_WRITE |
+		EFI_FILE_MODE_READ,
+		0
+	);
 
-  return status;
+	return status;
 }
 
 EFI_STATUS
 CloseFile(
-  IN EFI_FILE_PROTOCOL* File
+	IN EFI_FILE_PROTOCOL* File
 )
 {
-  //  flush unwritten data
-  File->Flush(File);
-  //  close file
-  File->Close(File);
+	//  flush unwritten data
+	File->Flush(File);
+	//  close file
+	File->Close(File);
 
-  return EFI_SUCCESS;
+	return EFI_SUCCESS;
 }
 
