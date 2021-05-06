@@ -35,7 +35,13 @@ AppendToLog(
 		return status;
 	}
 
-	CHAR16 message[] = L"Hello from UEFI driver";
+	UINT64 message[4] = { 0 }; // (UINT64) Lba, BufferSize, '\n' };
+
+	message[0] = (UINT64)MediaId;
+	message[1] = (UINT64)Lba;
+	message[2] = (UINT64)BufferSize;
+	message[3] = (UINT64)0x1111111111111111;
+
 
 	status = WriteDataToFile(
 		message,
