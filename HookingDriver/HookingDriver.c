@@ -250,7 +250,7 @@ ReadBlocksRandomStaff(
 )
 {
 	DEBUG((EFI_D_INFO, "Jesus, I'm reading blocks random staff! <INSIDE>, arg list: %x %x %x\r\n", MediaId, Lba, BufferSize));
-	AppendToLog(MediaId, Lba, BufferSize, Buffer);
+	AppendToLog(MediaId, Lba, BufferSize, Buffer, TRUE);
 	return ReadBlocksOrigAddress(This, MediaId, Lba, BufferSize, Buffer);
 }
 

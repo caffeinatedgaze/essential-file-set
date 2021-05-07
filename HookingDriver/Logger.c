@@ -9,7 +9,8 @@ AppendToLog(
 	IN UINT32 MediaId,
 	IN EFI_LBA Lba,
 	IN UINTN BufferSize,
-	IN VOID *Buffer
+	IN VOID *Buffer,
+	IN BOOLEAN isRead
 )
 {
 	DEBUG((EFI_D_INFO, "Appending to log ... \r\n"));
@@ -37,7 +38,7 @@ AppendToLog(
 
 	UINT64 message[4] = { 0 }; // (UINT64) Lba, BufferSize, '\n' };
 
-	message[0] = (UINT64)MediaId;
+	message[0] = (UINT64)isRead | (UINT64)MediaId << 32;
 	message[1] = (UINT64)Lba;
 	message[2] = (UINT64)BufferSize;
 	message[3] = (UINT64)0x1111111111111111;
