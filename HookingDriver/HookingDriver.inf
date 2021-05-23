@@ -27,6 +27,7 @@
   ComponentName.h
   Logger.c
   Logger.h
+  ../hashmap.h
 
 [LibraryClasses]
   UefiDriverEntryPoint

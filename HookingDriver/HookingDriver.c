@@ -15,6 +15,7 @@
 #include <Protocol/DriverBinding.h>
 #include "Partition.h"
 #include "Logger.h"
+#include "..\hashmap.h"
 
 ///
 /// Driver Binding Protocol instance
@@ -249,8 +250,8 @@ ReadBlocksRandomStaff(
 	OUT VOID*                 Buffer
 )
 {
-	DEBUG((EFI_D_INFO, "Jesus, I'm reading blocks random staff! <INSIDE>, arg list: %x %x %x\r\n", MediaId, Lba, BufferSize));
-	AppendToLog(MediaId, Lba, BufferSize, Buffer, TRUE);
+	DEBUG((EFI_D_INFO, "Jesus, I'm reading blocks random staff! <INSIDE>,poarg list: %x %x %x\r\n", MediaId, Lba, BufferSize));
+	AppendToLog(This, MediaId, Lba, BufferSize, Buffer, TRUE);
 	return ReadBlocksOrigAddress(This, MediaId, Lba, BufferSize, Buffer);
 }
 
@@ -274,6 +275,23 @@ WriteBlocksRandomStaff(
 	// AppendToLog(MediaId, Lba, BufferSize, Buffer);
 
 	return WriteBlocksOrigAddress(This, MediaId, Lba, BufferSize, Buffer);
+}
+
+int main() {
+	ht_t *ht = ht_create();
+
+	int things[] = {0x0001, 0x0002, 0x0003, 0x0004};
+	int other_things[] = {0x1111, 0x1112, 0x1113, 0x1114};
+
+	ht_set(ht, &things[0], &other_things[0]);
+	ht_set(ht, &things[1], &other_things[1]);
+	ht_set(ht, &things[2], &other_things[2]);
+	ht_set(ht, &things[3], &other_things[3]);
+	ht_set(ht, &things[4], &other_things[4]);
+
+	ht_dump(ht);
+
+	return 0;
 }
 
 
@@ -324,6 +342,7 @@ HookingDriverDriverBindingStart(
 	EFI_BLOCK_IO_PROTOCOL* BlkIo;
 
 	DEBUG((EFI_D_INFO, "Let's see if I can do that <HERE>\r\n"));
+	main();
 
 	EFI_STATUS Status = gBS->LocateHandleBuffer(
 		ByProtocol,
@@ -351,7 +370,7 @@ HookingDriverDriverBindingStart(
 
 		// PARTITION_PRIVATE_DATA *Private = PARTITION_DEVICE_FROM_BLOCK_IO_THIS (This);
 
-		DEBUG((EFI_D_INFO, "Incoming signature 1 %x\r\n", BASE_CR (This, PARTITION_PRIVATE_DATA, BlockIo)->Signature));
+		DEBUG((EFI_D_INFO, "Incoming signature 1 %x\r\n", BASE_CR(This, PARTITION_PRIVATE_DATA, BlockIo)->Signature));
 		// DEBUG((EFI_D_INFO, "Incoming signature 2 %x\r\n", Private->Signature));
 
 		if (ReadBlocksRandomStaff == BlkIo->ReadBlocks)

@@ -2,10 +2,13 @@
 #include <Library/DebugLib.h>
 #include <Guid/FileInfo.h>
 #include <Library/MemoryAllocationLib.h>
+#include <Library/DevicePathLib.h>
+#include <IndustryStandard/Mbr.h>
 
 
 EFI_STATUS
 AppendToLog(
+	IN EFI_BLOCK_IO_PROTOCOL* BlockIo,
 	IN UINT32 MediaId,
 	IN EFI_LBA Lba,
 	IN UINTN BufferSize,
@@ -18,7 +21,7 @@ AppendToLog(
 	EFI_STATUS status = 0;
 	EFI_FILE_PROTOCOL *Fs;
 	EFI_FILE_PROTOCOL *File = NULL;
-	CHAR16 FileName[] = L"AAAMyLogFile.txt"; // 0-terminated 8.3 file name
+	CHAR16 FileName[] = L"AAAMyLogFile.txt";
 
 
 	// Find writable FS
@@ -43,6 +46,9 @@ AppendToLog(
 	message[2] = (UINT64)BufferSize;
 	message[3] = (UINT64)0x1111111111111111;
 
+	// todo: Retrieve GUID and store it in the log
+	// todo: pass EFI_HANDLE BlockIoHandle into the function too
+	// RetrieveGUID(BlockIo, *BlockIoHandle*);
 
 	status = WriteDataToFile(
 		message,
@@ -199,40 +205,104 @@ FINALLY:
 	return status;
 }
 
+
+// EFI_STATUS
+// EFIAPI
+// RetrieveGUID(
+// 	IN EFI_HANDLE                  BlkIoHandle
+// )
+// {
+// 
+// 	EFI_STATUS                  Status;
+// 	EFI_BLOCK_IO_PROTOCOL       *BlkIo;
+// 	UINT32                      BlockSize;
+// 	EFI_DEVICE_PATH_PROTOCOL    *DevPath;
+// 	CHAR16                      *DevPathString;
+// 	EFI_PARTITION_TABLE_HEADER  *PartHdr;
+// 	MASTER_BOOT_RECORD          *PMBR;
+// 
+// 	//
+// 	// Locate Handles that support BlockIo protocol
+// 	//
+// 
+// 	if (BlkIo->Media->LogicalPartition) {  //if partition skip
+// 		return Status;
+// 	}
+// 	DevPath = DevicePathFromHandle(BlkIoHandle);
+// 	if (DevPath == NULL) {
+// 		return Status;
+// 	}
+// 	DevPathString = ConvertDevicePathToText(DevPath, TRUE, FALSE);
+// 	// DEBUG((EFI_D_ERROR, L"%s \nMedia Id: %d, device type: %x, SubType: %x, logical: %x\n", \
+// 	// 	DevPathString, BlkIo->Media->MediaId, DevPath->Type, DevPath->SubType, \
+// 	// 	BlkIo->Media->LogicalPartition));
+// 
+// 	BlockSize = BlkIo->Media->BlockSize;
+// 	PartHdr = AllocateZeroPool(BlockSize);
+// 	PMBR = AllocateZeroPool(BlockSize);
+// 	//read LBA0
+// 	Status = BlkIo->ReadBlocks(
+// 		BlkIo,
+// 		BlkIo->Media->MediaId,
+// 		(EFI_LBA)0,							//LBA 0, MBR/Protetive MBR
+// 		BlockSize,
+// 		PMBR
+// 	);
+// 	//read LBA1
+// 	Status = BlkIo->ReadBlocks(
+// 		BlkIo,
+// 		BlkIo->Media->MediaId,
+// 		(EFI_LBA)1,							//LBA 1, GPT
+// 		BlockSize,
+// 		PartHdr
+// 	);
+// 	//check if GPT
+// 	if (PartHdr->Header.Signature == EFI_PTAB_HEADER_ID) {
+// 
+// 		if (PMBR->Signature == MBR_SIGNATURE) {
+// 			DEBUG((EFI_D_ERROR, "####^^^&&& Found MBR.\n"));
+// 			// DEBUG((EFI_D_ERROR, "FindWritableFs: Fs->Open[%d] returned %r\n", i, Status));
+// 		}
+// 		// Print(L"LBA 1,");
+// 		// Print(L"GPT:\n");
+// 		//
+// 		//you can add some parse GPT data structure here
+// 		//
+// 		AppPrintBuffer((UINT16 *)PartHdr);
+// 	}
+// 	else {
+// 		if (PMBR->Signature == MBR_SIGNATURE) {
+// 			// Print(L"LBA 0,");
+// 			// Print(L"MBR:\n");
+// 			AppPrintBuffer((UINT16 *)PMBR);
+// 			// Print(L"\n");
+// 		}
+// 	}
+// 	FreePool(PartHdr);
+// 	FreePool(PMBR);
+// 
+// 	//debug dump device path
+// 	//DumpDevicePath();
+// 	return Status;
+// }
+
+
 EFI_STATUS
-OpenFile(
-	IN  EFI_FILE_PROTOCOL* Volume,
-	OUT EFI_FILE_PROTOCOL** File,
-	IN  CHAR16* Path
+AppPrintBuffer(
+	UINT16  *Buffer
 )
 {
-	EFI_STATUS status;
-	*File = NULL;
+	UINTN   i;
 
-	//  from root file we open file specified by path
-	status = Volume->Open(
-		Volume,
-		File,
-		Path,
-		EFI_FILE_MODE_CREATE |
-		EFI_FILE_MODE_WRITE |
-		EFI_FILE_MODE_READ,
-		0
-	);
+	for (i = 0; i <= 0xFF; i++) {
+		if ((i % 10) == 0) {
+			if (i != 0);
+			DEBUG((EFI_D_INFO, "\r\n"));
+			DEBUG((EFI_D_INFO, "%.3d: ", i));
+		}
 
-	return status;
-}
-
-EFI_STATUS
-CloseFile(
-	IN EFI_FILE_PROTOCOL* File
-)
-{
-	//  flush unwritten data
-	File->Flush(File);
-	//  close file
-	File->Close(File);
-
+		DEBUG((EFI_D_INFO, "%.4X ", (UINTN)Buffer[i]));
+	}
 	return EFI_SUCCESS;
 }
 
