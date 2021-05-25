@@ -17,6 +17,9 @@
 #include "Logger.h"
 #include "..\hashmap.h"
 
+
+ht_t *gHashmap; // maps protocol handles to context 
+
 ///
 /// Driver Binding Protocol instance
 ///
@@ -134,34 +137,8 @@ HookingDriverDriverEntryPoint(
 
 	DEBUG((EFI_D_INFO, "Loading HookingDriver ... \r\n"));
 
-	// ReadGpt();
-
-/*	EFI_HANDLE ControllerHandle;
-	EFI_SIMPLE_FILE_SYSTEM_PROTOCOL *fsProtocol = NULL;
-
-	Status = gBS->OpenProtocol(
-		ControllerHandle,
-		&gEfi,
-		(VOID **)&fsProtocol,
-		gImageHandle,
-		ControllerHandle,
-		EFI_OPEN_PROTOCOL_GET_PROTOCOL
-	);
-	if (EFI_ERROR(Status)) {
-		return Status;
-	}*/
-
-
-	// fsProtocol->OpenVolume = NULL;
-	// Status = gBS->ReinstallProtocolInterface(
-	// 	ControllerHandle,
-	// 	&gEfiSimpleFileSystemProtocolGuid,
-	// 	fsProtocol,
-	// 	fsProtocol
-	// );
-	// if (EFI_ERROR(Status)) {
-	// 	return Status;
-	// }
+	// Initialize hashmap
+	gHashmap = ht_create();
 
 	return Status;
 }
@@ -250,7 +227,14 @@ ReadBlocksRandomStaff(
 	OUT VOID*                 Buffer
 )
 {
-	DEBUG((EFI_D_INFO, "Jesus, I'm reading blocks random staff! <INSIDE>,poarg list: %x %x %x\r\n", MediaId, Lba, BufferSize));
+	DEBUG((EFI_D_INFO, "Jesus, I'm reading blocks random staff! <INSIDE>, poarg list: %x %x %x\r\n", MediaId, Lba, BufferSize));
+
+	pHookingContext context = ht_get(gHashmap, This);
+
+	DEBUG((EFI_D_INFO, "%x %x %x\r\n", context, context->originalReadPtr, ReadBlocksOrigAddress));
+
+	RetrieveGUID(context->blkIoHandle, This, context);
+
 	AppendToLog(This, MediaId, Lba, BufferSize, Buffer, TRUE);
 	return ReadBlocksOrigAddress(This, MediaId, Lba, BufferSize, Buffer);
 }
@@ -278,18 +262,16 @@ WriteBlocksRandomStaff(
 }
 
 int main() {
-	ht_t *ht = ht_create();
+	int things[] = { 0x0001, 0x0002, 0x0003, 0x0004 };
+	int other_things[] = { 0x1111, 0x1112, 0x1113, 0x1114 };
 
-	int things[] = {0x0001, 0x0002, 0x0003, 0x0004};
-	int other_things[] = {0x1111, 0x1112, 0x1113, 0x1114};
+	ht_set(gHashmap, &things[0], &other_things[0]);
+	ht_set(gHashmap, &things[1], &other_things[1]);
+	ht_set(gHashmap, &things[2], &other_things[2]);
+	ht_set(gHashmap, &things[3], &other_things[3]);
+	ht_set(gHashmap, &things[4], &other_things[4]);
 
-	ht_set(ht, &things[0], &other_things[0]);
-	ht_set(ht, &things[1], &other_things[1]);
-	ht_set(ht, &things[2], &other_things[2]);
-	ht_set(ht, &things[3], &other_things[3]);
-	ht_set(ht, &things[4], &other_things[4]);
-
-	ht_dump(ht);
+	ht_dump(gHashmap);
 
 	return 0;
 }
@@ -342,7 +324,7 @@ HookingDriverDriverBindingStart(
 	EFI_BLOCK_IO_PROTOCOL* BlkIo;
 
 	DEBUG((EFI_D_INFO, "Let's see if I can do that <HERE>\r\n"));
-	main();
+	// main();
 
 	EFI_STATUS Status = gBS->LocateHandleBuffer(
 		ByProtocol,
@@ -369,8 +351,7 @@ HookingDriverDriverBindingStart(
 			continue;
 
 		// PARTITION_PRIVATE_DATA *Private = PARTITION_DEVICE_FROM_BLOCK_IO_THIS (This);
-
-		DEBUG((EFI_D_INFO, "Incoming signature 1 %x\r\n", BASE_CR(This, PARTITION_PRIVATE_DATA, BlockIo)->Signature));
+		// DEBUG((EFI_D_INFO, "Incoming signature 1 %x\r\n", BASE_CR(This, PARTITION_PRIVATE_DATA, BlockIo)->Signature));
 		// DEBUG((EFI_D_INFO, "Incoming signature 2 %x\r\n", Private->Signature));
 
 		if (ReadBlocksRandomStaff == BlkIo->ReadBlocks)
@@ -379,8 +360,16 @@ HookingDriverDriverBindingStart(
 		ReadBlocksOrigAddress = BlkIo->ReadBlocks;
 		WriteBlocksOrigAddress = BlkIo->WriteBlocks;
 
+		pHookingContext context = AllocatePool(sizeof(HookingContext));
+		context->originalReadPtr = BlkIo->ReadBlocks;
+		context->originalWritePtr = BlkIo->WriteBlocks;
+		context->blkIoHandle = BlkIoHandle[Index];
+
 		BlkIo->ReadBlocks = ReadBlocksRandomStaff;
-		BlkIo->WriteBlocks = WriteBlocksRandomStaff; // WriteBlocksRandomStaff;
+		BlkIo->WriteBlocks = WriteBlocksRandomStaff;
+
+		ht_set(gHashmap, BlkIo, context);
+		ht_dump(gHashmap);
 
 		DEBUG((EFI_D_INFO, "Performing right hook <HOOK>\r\n"));
 	}
@@ -430,3 +419,84 @@ HookingDriverDriverBindingStop(
 {
 	return EFI_UNSUPPORTED;
 }
+
+EFI_STATUS
+EFIAPI
+RetrieveGUID(
+	IN EFI_HANDLE				    BlkIoHandle,
+	IN EFI_BLOCK_IO_PROTOCOL		*BlkIo,
+	IN pHookingContext				context
+)
+{
+	EFI_STATUS                  Status;
+	UINT32                      BlockSize;
+	EFI_DEVICE_PATH_PROTOCOL    *DevPath;
+	CHAR16                      *DevPathString;
+	EFI_PARTITION_TABLE_HEADER  *PartHdr;
+	MASTER_BOOT_RECORD          *PMBR;
+
+	//
+	// Locate Handles that support BlockIo protocol
+	//
+
+	if (BlkIo->Media->LogicalPartition) {  //if partition skip
+		return 0;
+	}
+	DevPath = DevicePathFromHandle(BlkIoHandle);
+	if (DevPath == NULL) {
+		return 0;
+	}
+	DevPathString = ConvertDevicePathToText(DevPath, TRUE, FALSE);
+	// DEBUG((EFI_D_ERROR, L"%s \nMedia Id: %d, device type: %x, SubType: %x, logical: %x\n", \
+	// 	DevPathString, BlkIo->Media->MediaId, DevPath->Type, DevPath->SubType, \
+	// 	BlkIo->Media->LogicalPartition));
+
+	BlockSize = BlkIo->Media->BlockSize;
+	PartHdr = AllocateZeroPool(BlockSize);
+	PMBR = AllocateZeroPool(BlockSize);
+	//read LBA0
+	Status = context->originalReadPtr(
+		BlkIo,
+		BlkIo->Media->MediaId,
+		(EFI_LBA)0,							//LBA 0, MBR/Protetive MBR
+		BlockSize,
+		PMBR
+	);
+	//read LBA1
+	Status = context->originalReadPtr(
+		BlkIo,
+		BlkIo->Media->MediaId,
+		(EFI_LBA)1,							//LBA 1, GPT
+		BlockSize,
+		PartHdr
+	);
+	//check if GPT
+	if (PartHdr->Header.Signature == EFI_PTAB_HEADER_ID) {
+
+		if (PMBR->Signature == MBR_SIGNATURE) {
+			DEBUG((EFI_D_ERROR, "####^^^&&& Found MBR.\n"));
+			// DEBUG((EFI_D_ERROR, "FindWritableFs: Fs->Open[%d] returned %r\n", i, Status));
+		}
+		// Print(L"LBA 1,");
+		// Print(L"GPT:\n");
+		//
+		//you can add some parse GPT data structure here
+		//
+		AppPrintBuffer((UINT16 *)PartHdr);
+	}
+	else {
+		if (PMBR->Signature == MBR_SIGNATURE) {
+			// Print(L"LBA 0,");
+			// Print(L"MBR:\n");
+			AppPrintBuffer((UINT16 *)PMBR);
+			// Print(L"\n");
+		}
+	}
+	FreePool(PartHdr);
+	FreePool(PMBR);
+
+	//debug dump device path
+	//DumpDevicePath();
+	return Status;
+}
+

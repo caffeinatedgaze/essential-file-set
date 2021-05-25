@@ -11,6 +11,4 @@ EFI_STATUS EFIAPI FindWritableFs(OUT EFI_FILE_PROTOCOL ** WritableFs);
 
 EFI_STATUS WriteDataToFile(IN VOID * Buffer, IN UINTN BufferSize, IN EFI_FILE_PROTOCOL * File);
 
-EFI_STATUS EFIAPI RetrieveGUID(IN EFI_HANDLE BlkIoHandle);
-
 EFI_STATUS AppPrintBuffer(UINT16 * Buffer);

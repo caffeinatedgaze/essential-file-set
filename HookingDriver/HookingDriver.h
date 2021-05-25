@@ -1,10 +1,10 @@
 /** @file
   TODO: Brief Description of UEFI Driver HookingDriver
-  
+
   TODO: Detailed Description of UEFI Driver HookingDriver
 
   TODO: Copyright for UEFI Driver HookingDriver
-  
+
   TODO: License for UEFI Driver HookingDriver
 
 **/
@@ -62,5 +62,20 @@ extern EFI_COMPONENT_NAME_PROTOCOL  gHookingDriverComponentName;
 //
 #include "DriverBinding.h"
 #include "ComponentName.h"
+
+#include "Protocol/BlockIo.h"
+
+typedef struct HookingContext {
+	// todo: store guids here
+	EFI_HANDLE blkIoHandle;
+	EFI_BLOCK_READ originalReadPtr;
+	EFI_BLOCK_WRITE originalWritePtr;
+} HookingContext, *pHookingContext;
+
+EFI_STATUS EFIAPI RetrieveGUID(
+	IN EFI_HANDLE				    BlkIoHandle,
+	IN EFI_BLOCK_IO_PROTOCOL		*BlkIo,
+	IN pHookingContext				context
+);
 
 #endif

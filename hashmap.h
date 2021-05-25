@@ -109,7 +109,7 @@ VOID ht_dump(ht_t *hashtable) {
 		DEBUG((EFI_D_INFO, "slot[%4x]: ", i));
 
 		for (;;) {
-			DEBUG((EFI_D_INFO, "%x=%x", entry->key, entry->value));
+			DEBUG((EFI_D_INFO, "%x=%x ", entry->key, entry->value));
 
 			if (entry->next == NULL)
 				break;
