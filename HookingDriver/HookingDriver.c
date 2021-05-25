@@ -369,12 +369,11 @@ HookingDriverDriverBindingStart(
 		BlkIo->WriteBlocks = WriteBlocksRandomStaff;
 
 		ht_set(gHashmap, BlkIo, context);
-		ht_dump(gHashmap);
-
 		DEBUG((EFI_D_INFO, "Performing right hook <HOOK>\r\n"));
 	}
 
-	DEBUG((EFI_D_INFO, "I made it through <THERE>\r\n"));
+	DEBUG((EFI_D_INFO, "<HASHTABLE DUMP>\r\n"));
+    ht_dump(gHashmap);
 
 	if (EFI_ERROR(Status))
 		return EFI_UNSUPPORTED;
@@ -439,21 +438,20 @@ RetrieveGUID(
 	// Locate Handles that support BlockIo protocol
 	//
 
-	if (BlkIo->Media->LogicalPartition) {  //if partition skip
+	if (BlkIo->Media->LogicalPartition) {  // skip if partition
 		return 0;
 	}
 	DevPath = DevicePathFromHandle(BlkIoHandle);
 	if (DevPath == NULL) {
 		return 0;
 	}
+
 	DevPathString = ConvertDevicePathToText(DevPath, TRUE, FALSE);
-	// DEBUG((EFI_D_ERROR, L"%s \nMedia Id: %d, device type: %x, SubType: %x, logical: %x\n", \
-	// 	DevPathString, BlkIo->Media->MediaId, DevPath->Type, DevPath->SubType, \
-	// 	BlkIo->Media->LogicalPartition));
 
 	BlockSize = BlkIo->Media->BlockSize;
 	PartHdr = AllocateZeroPool(BlockSize);
 	PMBR = AllocateZeroPool(BlockSize);
+
 	//read LBA0
 	Status = context->originalReadPtr(
 		BlkIo,
@@ -470,33 +468,21 @@ RetrieveGUID(
 		BlockSize,
 		PartHdr
 	);
-	//check if GPT
+
+	// check if GPT
 	if (PartHdr->Header.Signature == EFI_PTAB_HEADER_ID) {
 
 		if (PMBR->Signature == MBR_SIGNATURE) {
-			DEBUG((EFI_D_ERROR, "####^^^&&& Found MBR.\n"));
-			// DEBUG((EFI_D_ERROR, "FindWritableFs: Fs->Open[%d] returned %r\n", i, Status));
+			DEBUG((EFI_D_INFO, "####^^^&&& Found MBR.\n"));
 		}
-		// Print(L"LBA 1,");
-		// Print(L"GPT:\n");
-		//
-		//you can add some parse GPT data structure here
-		//
-		AppPrintBuffer((UINT16 *)PartHdr);
+		DEBUG((EFI_D_INFO, "PartHdr: %x\r\n", PartHdr));
 	}
-	else {
-		if (PMBR->Signature == MBR_SIGNATURE) {
-			// Print(L"LBA 0,");
-			// Print(L"MBR:\n");
-			AppPrintBuffer((UINT16 *)PMBR);
-			// Print(L"\n");
-		}
+	else if (PMBR->Signature == MBR_SIGNATURE) {
+		DEBUG((EFI_D_INFO, "PartHdr: %x\r\n", PartHdr));
 	}
+
 	FreePool(PartHdr);
 	FreePool(PMBR);
-
-	//debug dump device path
-	//DumpDevicePath();
 	return Status;
 }
 
