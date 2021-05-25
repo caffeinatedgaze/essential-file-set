@@ -207,7 +207,7 @@ FINALLY:
 
 EFI_STATUS
 AppPrintBuffer(
-	UINT16  *Buffer
+	CHAR16  *Buffer
 )
 {
 	UINTN   i;
@@ -219,7 +219,7 @@ AppPrintBuffer(
 			DEBUG((EFI_D_INFO, "%.3d: ", i));
 		}
 
-		DEBUG((EFI_D_INFO, "%.4X ", (UINTN)Buffer[i]));
+		DEBUG((EFI_D_INFO, "%.4X ", Buffer[i]));
 	}
 	return EFI_SUCCESS;
 }

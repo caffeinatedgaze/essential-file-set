@@ -373,7 +373,7 @@ HookingDriverDriverBindingStart(
 	}
 
 	DEBUG((EFI_D_INFO, "<HASHTABLE DUMP>\r\n"));
-    ht_dump(gHashmap);
+	ht_dump(gHashmap);
 
 	if (EFI_ERROR(Status))
 		return EFI_UNSUPPORTED;
@@ -452,33 +452,57 @@ RetrieveGUID(
 	PartHdr = AllocateZeroPool(BlockSize);
 	PMBR = AllocateZeroPool(BlockSize);
 
-	//read LBA0
+	// read LBA0
 	Status = context->originalReadPtr(
 		BlkIo,
 		BlkIo->Media->MediaId,
-		(EFI_LBA)0,							//LBA 0, MBR/Protetive MBR
+		(EFI_LBA)0,							// LBA 0, MBR/Protective MBR
 		BlockSize,
 		PMBR
 	);
-	//read LBA1
+	// read LBA1
 	Status = context->originalReadPtr(
 		BlkIo,
 		BlkIo->Media->MediaId,
-		(EFI_LBA)1,							//LBA 1, GPT
+		(EFI_LBA)1,							// LBA 1, GPT
 		BlockSize,
 		PartHdr
 	);
+
+	DEBUG((EFI_D_INFO, "RetrieveGuid: PMBR\r\n"));
+	AppPrintBuffer((VOID*)PMBR);
+	DEBUG((EFI_D_INFO, "\r\nRetrieveGuid: FINISHED >>>\r\n"));
+
+	DEBUG((EFI_D_INFO, "RetrieveGuid: PartHdr\r\n"));
+	AppPrintBuffer((VOID*)PartHdr);
+	DEBUG((EFI_D_INFO, "\r\nRetrieveGuid: FINISHED >>>\r\n"));
+
+	VOID *diskGuid = AllocateZeroPool(0xff * BlockSize);
+
+	EFI_STATUS status = context->originalReadPtr(BlkIo, BlkIo->Media->MediaId, (EFI_LBA)50, BlockSize * 0xff, diskGuid);
+
+	if (EFI_ERROR(status)) {
+		DEBUG((EFI_D_INFO, "RetrieveGuid: Failed to read GPT, %r\r\n", status));
+		return status;
+	}
+
+	DEBUG((EFI_D_INFO, "RetrieveGuid: Disk GUID in mixed endian\r\n"));
+	AppPrintBuffer(diskGuid);
+	DEBUG((EFI_D_INFO, "\r\nRetrieveGuid: FINISHED >>>\r\n"));
+
+
+	FreePool(diskGuid);
 
 	// check if GPT
 	if (PartHdr->Header.Signature == EFI_PTAB_HEADER_ID) {
 
 		if (PMBR->Signature == MBR_SIGNATURE) {
-			DEBUG((EFI_D_INFO, "####^^^&&& Found MBR.\n"));
+			DEBUG((EFI_D_INFO, "RetrieveGuid: Found protective MBR\r\n"));
 		}
-		DEBUG((EFI_D_INFO, "PartHdr: %x\r\n", PartHdr));
+		DEBUG((EFI_D_INFO, "RetrieveGuid: PartHdr=%x\r\n", PartHdr));
 	}
 	else if (PMBR->Signature == MBR_SIGNATURE) {
-		DEBUG((EFI_D_INFO, "PartHdr: %x\r\n", PartHdr));
+		DEBUG((EFI_D_INFO, "RetrieveGuid: PartHdr=%x\r\n", PartHdr));
 	}
 
 	FreePool(PartHdr);
