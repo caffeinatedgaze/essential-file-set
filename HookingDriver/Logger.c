@@ -6,6 +6,29 @@
 #include <IndustryStandard/Mbr.h>
 
 
+/*
+	Return EFI_SUCCESS if file exists
+*/
+EFI_STATUS DoesFileExist(CHAR16 *FileName)
+{
+	EFI_STATUS status = 0;
+	EFI_FILE_PROTOCOL *Fs;
+	EFI_FILE_PROTOCOL *File = NULL;
+
+	status = FindWritableFs(&Fs);
+
+	if (EFI_ERROR(status)) {
+		DEBUG((EFI_D_ERROR, "DoesFileExist: Can't find writable FS\n"));
+		return EFI_SUCCESS;
+	}
+
+	status = Fs->Open(Fs, &File, FileName, EFI_FILE_MODE_READ, 0);
+	if (EFI_ERROR(status)) {
+		return status;
+	}
+	return EFI_SUCCESS;
+}
+
 EFI_STATUS
 AppendToLog(
 	IN EFI_BLOCK_IO_PROTOCOL* BlockIo,

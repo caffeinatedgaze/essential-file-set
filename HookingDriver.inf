@@ -12,7 +12,7 @@
 [Defines]
   INF_VERSION               = 0x00010005
   BASE_NAME                 = HookingDriver
-  FILE_GUID                 = d97ec0ee-6913-11eb-b6e2-001c42e6bd7c
+  FILE_GUID                 = 134ac1cf-c53f-11eb-8434-001c42e6bd7c
   MODULE_TYPE               = UEFI_DRIVER
   VERSION_STRING            = 1.0
   ENTRY_POINT               = HookingDriverDriverEntryPoint
@@ -23,14 +23,6 @@
 [Sources]
   HookingDriver.h
   HookingDriver.c
-  ComponentName.c
-  ComponentName.h
-  Logger.c
-  Logger.h
-  Hook.h
-  Hook.c
-  ../hashmap.h
-  ../hashmap.c
 
 [LibraryClasses]
   UefiDriverEntryPoint
@@ -43,13 +35,6 @@
   DebugLib
 
 [Protocols]
-  gEfiDriverBindingProtocolGuid
-  gEfiPciIoProtocolGuid
-  gEfiComponentName2ProtocolGuid
-  gEfiComponentNameProtocolGuid
-  gEfiBlockIoProtocolGuid
-  gEfiSimpleFileSystemProtocolGuid
 
 [Guids]
-  gEfiFileInfoGuid
 

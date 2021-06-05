@@ -5,6 +5,8 @@
 #include <Protocol/SimpleFileSystem.h>
 #include <Library/UefiBootServicesTableLib.h>
 
+EFI_STATUS DoesFileExist(CHAR16 * FileName);
+
 EFI_STATUS AppendToLog(IN EFI_BLOCK_IO_PROTOCOL *BlockIo, IN UINT32 MediaId, IN EFI_LBA Lba, IN UINTN BufferSize, IN VOID * Buffer, IN BOOLEAN isRead);
 
 EFI_STATUS EFIAPI FindWritableFs(OUT EFI_FILE_PROTOCOL ** WritableFs);

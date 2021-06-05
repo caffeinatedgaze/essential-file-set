@@ -10,15 +10,7 @@
 **/
 
 #include "HookingDriver.h"
-#include "Source.h"
-#include <Library/UefiBootServicesTableLib.h>
-#include <Protocol/DriverBinding.h>
-#include "Partition.h"
-#include "Logger.h"
-#include "..\hashmap.h"
 
-
-ht_t *gHashmap; // maps protocol handles to context 
 
 ///
 /// Driver Binding Protocol instance
@@ -135,10 +127,11 @@ HookingDriverDriverEntryPoint(
 	);
 	ASSERT_EFI_ERROR(Status);
 
-	DEBUG((EFI_D_INFO, "Loading HookingDriver ... \r\n"));
+	Print(L"Loading HookingDriver\r\n");
 
 	// Initialize hashmap
 	gHashmap = ht_create();
+	PerformHook();
 
 	return Status;
 }
@@ -212,55 +205,6 @@ HookingDriverDriverBindingSupported(
 }
 
 
-EFI_STATUS(*origAddress)(EFI_BLOCK_READ*, CHAR16*) = NULL;
-EFI_BLOCK_READ ReadBlocksOrigAddress;
-EFI_BLOCK_WRITE WriteBlocksOrigAddress;
-
-
-EFI_STATUS
-EFIAPI
-ReadBlocksRandomStaff(
-	IN EFI_BLOCK_IO_PROTOCOL* This,
-	IN UINT32                 MediaId,
-	IN EFI_LBA                Lba,
-	IN UINTN                  BufferSize,
-	OUT VOID*                 Buffer
-)
-{
-	DEBUG((EFI_D_INFO, "Jesus, I'm reading blocks random staff! <INSIDE>, poarg list: %x %x %x\r\n", MediaId, Lba, BufferSize));
-
-	pHookingContext context = ht_get(gHashmap, This);
-
-	DEBUG((EFI_D_INFO, "%x %x %x\r\n", context, context->originalReadPtr, ReadBlocksOrigAddress));
-
-	RetrieveGUID(context->blkIoHandle, This, context);
-
-	AppendToLog(This, MediaId, Lba, BufferSize, Buffer, TRUE);
-	return ReadBlocksOrigAddress(This, MediaId, Lba, BufferSize, Buffer);
-}
-
-
-EFI_STATUS
-EFIAPI
-WriteBlocksRandomStaff(
-	IN EFI_BLOCK_IO_PROTOCOL *This,
-	IN UINT32                 MediaId,
-	IN EFI_LBA                Lba,
-	IN UINTN                  BufferSize,
-	IN VOID                   *Buffer
-)
-{
-	//CHAR16* MyString = L"Write override\r\n";
-
-	//if (0 != StrCmp(Buffer, MyString)) 
-	//	gST->ConOut->OutputString(gST->ConOut, MyString);
-
-	DEBUG((EFI_D_INFO, "Jesus, I'm writing blocks random staff! <INSIDE>\r\n"));
-	// AppendToLog(MediaId, Lba, BufferSize, Buffer);
-
-	return WriteBlocksOrigAddress(This, MediaId, Lba, BufferSize, Buffer);
-}
-
 int main() {
 	int things[] = { 0x0001, 0x0002, 0x0003, 0x0004 };
 	int other_things[] = { 0x1111, 0x1112, 0x1113, 0x1114 };
@@ -319,65 +263,6 @@ HookingDriverDriverBindingStart(
 	IN EFI_DEVICE_PATH_PROTOCOL     *RemainingDevicePath OPTIONAL
 )
 {
-	UINTN	NoBlkIoHandles;
-	EFI_HANDLE *BlkIoHandle = NULL;
-	EFI_BLOCK_IO_PROTOCOL* BlkIo;
-
-	DEBUG((EFI_D_INFO, "Let's see if I can do that <HERE>\r\n"));
-	// main();
-
-	EFI_STATUS Status = gBS->LocateHandleBuffer(
-		ByProtocol,
-		&gEfiBlockIoProtocolGuid,
-		NULL,
-		&NoBlkIoHandles,
-		&BlkIoHandle
-	);
-
-	if (EFI_ERROR(Status))
-		return EFI_UNSUPPORTED;
-
-	for (UINTN Index = 0; Index < NoBlkIoHandles; Index++) {
-		Status = gBS->HandleProtocol(
-			BlkIoHandle[Index],
-			&gEfiBlockIoProtocolGuid,
-			(VOID**)&BlkIo
-		);
-
-		if (EFI_ERROR(Status))
-			break;
-
-		if (BlkIo->Media->LogicalPartition)
-			continue;
-
-		// PARTITION_PRIVATE_DATA *Private = PARTITION_DEVICE_FROM_BLOCK_IO_THIS (This);
-		// DEBUG((EFI_D_INFO, "Incoming signature 1 %x\r\n", BASE_CR(This, PARTITION_PRIVATE_DATA, BlockIo)->Signature));
-		// DEBUG((EFI_D_INFO, "Incoming signature 2 %x\r\n", Private->Signature));
-
-		if (ReadBlocksRandomStaff == BlkIo->ReadBlocks)
-			continue;
-
-		ReadBlocksOrigAddress = BlkIo->ReadBlocks;
-		WriteBlocksOrigAddress = BlkIo->WriteBlocks;
-
-		pHookingContext context = AllocatePool(sizeof(HookingContext));
-		context->originalReadPtr = BlkIo->ReadBlocks;
-		context->originalWritePtr = BlkIo->WriteBlocks;
-		context->blkIoHandle = BlkIoHandle[Index];
-
-		BlkIo->ReadBlocks = ReadBlocksRandomStaff;
-		BlkIo->WriteBlocks = WriteBlocksRandomStaff;
-
-		ht_set(gHashmap, BlkIo, context);
-		DEBUG((EFI_D_INFO, "Performing right hook <HOOK>\r\n"));
-	}
-
-	DEBUG((EFI_D_INFO, "<HASHTABLE DUMP>\r\n"));
-	ht_dump(gHashmap);
-
-	if (EFI_ERROR(Status))
-		return EFI_UNSUPPORTED;
-
 	return EFI_SUCCESS;
 }
 
@@ -418,95 +303,3 @@ HookingDriverDriverBindingStop(
 {
 	return EFI_UNSUPPORTED;
 }
-
-EFI_STATUS
-EFIAPI
-RetrieveGUID(
-	IN EFI_HANDLE				    BlkIoHandle,
-	IN EFI_BLOCK_IO_PROTOCOL		*BlkIo,
-	IN pHookingContext				context
-)
-{
-	EFI_STATUS                  Status;
-	UINT32                      BlockSize;
-	EFI_DEVICE_PATH_PROTOCOL    *DevPath;
-	CHAR16                      *DevPathString;
-	EFI_PARTITION_TABLE_HEADER  *PartHdr;
-	MASTER_BOOT_RECORD          *PMBR;
-
-	//
-	// Locate Handles that support BlockIo protocol
-	//
-
-	if (BlkIo->Media->LogicalPartition) {  // skip if partition
-		return 0;
-	}
-	DevPath = DevicePathFromHandle(BlkIoHandle);
-	if (DevPath == NULL) {
-		return 0;
-	}
-
-	DevPathString = ConvertDevicePathToText(DevPath, TRUE, FALSE);
-
-	BlockSize = BlkIo->Media->BlockSize;
-	PartHdr = AllocateZeroPool(BlockSize);
-	PMBR = AllocateZeroPool(BlockSize);
-
-	// read LBA0
-	Status = context->originalReadPtr(
-		BlkIo,
-		BlkIo->Media->MediaId,
-		(EFI_LBA)0,							// LBA 0, MBR/Protective MBR
-		BlockSize,
-		PMBR
-	);
-	// read LBA1
-	Status = context->originalReadPtr(
-		BlkIo,
-		BlkIo->Media->MediaId,
-		(EFI_LBA)1,							// LBA 1, GPT
-		BlockSize,
-		PartHdr
-	);
-
-	DEBUG((EFI_D_INFO, "RetrieveGuid: PMBR\r\n"));
-	AppPrintBuffer((VOID*)PMBR);
-	DEBUG((EFI_D_INFO, "\r\nRetrieveGuid: FINISHED >>>\r\n"));
-
-	DEBUG((EFI_D_INFO, "RetrieveGuid: PartHdr\r\n"));
-	AppPrintBuffer((VOID*)PartHdr);
-	DEBUG((EFI_D_INFO, "\r\nRetrieveGuid: FINISHED >>>\r\n"));
-
-	VOID *diskGuid = AllocateZeroPool(0xff * BlockSize);
-
-	EFI_STATUS status = context->originalReadPtr(BlkIo, BlkIo->Media->MediaId, (EFI_LBA)50, BlockSize * 0xff, diskGuid);
-
-	if (EFI_ERROR(status)) {
-		DEBUG((EFI_D_INFO, "RetrieveGuid: Failed to read GPT, %r\r\n", status));
-		return status;
-	}
-
-	DEBUG((EFI_D_INFO, "RetrieveGuid: Disk GUID in mixed endian\r\n"));
-	AppPrintBuffer(diskGuid);
-	DEBUG((EFI_D_INFO, "\r\nRetrieveGuid: FINISHED >>>\r\n"));
-
-
-	FreePool(diskGuid);
-
-	// check if GPT
-	if (PartHdr->Header.Signature == EFI_PTAB_HEADER_ID) {
-
-		if (PMBR->Signature == MBR_SIGNATURE) {
-			DEBUG((EFI_D_INFO, "RetrieveGuid: Found protective MBR\r\n"));
-		}
-		DEBUG((EFI_D_INFO, "RetrieveGuid: PartHdr=%x\r\n", PartHdr));
-	}
-	else if (PMBR->Signature == MBR_SIGNATURE) {
-		DEBUG((EFI_D_INFO, "RetrieveGuid: PartHdr=%x\r\n", PartHdr));
-	}
-
-	FreePool(PartHdr);
-	FreePool(PMBR);
-	return Status;
-}
-

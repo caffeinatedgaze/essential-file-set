@@ -1,10 +1,10 @@
 /** @file
   TODO: Brief Description of UEFI Driver HookingDriver
-
+  
   TODO: Detailed Description of UEFI Driver HookingDriver
 
   TODO: Copyright for UEFI Driver HookingDriver
-
+  
   TODO: License for UEFI Driver HookingDriver
 
 **/
@@ -28,14 +28,10 @@
 //
 // UEFI Driver Model Protocols
 //
-#include <Protocol/DriverBinding.h>
-#include <Protocol/ComponentName2.h>
-#include <Protocol/ComponentName.h>
 
 //
 // Consumed Protocols
 //
-#include <Protocol/PciIo.h>
 
 //
 // Produced Protocols
@@ -48,28 +44,13 @@
 //
 // Driver Version
 //
-#define HOOKING_DRIVER_VERSION  0x00000000
 
 //
 // Protocol instances
 //
-extern EFI_DRIVER_BINDING_PROTOCOL  gHookingDriverDriverBinding;
-extern EFI_COMPONENT_NAME2_PROTOCOL  gHookingDriverComponentName2;
-extern EFI_COMPONENT_NAME_PROTOCOL  gHookingDriverComponentName;
 
 //
 // Include files with function prototypes
 //
-#include "DriverBinding.h"
-#include "ComponentName.h"
-
-#include <Library/UefiBootServicesTableLib.h>
-#include <Protocol/DriverBinding.h>
-#include <Protocol/BlockIo.h>
-
-#include "..\hashmap.h"
-#include "Hook.h"
-
-ht_t *gHashmap; // maps protocol handles to context 
 
 #endif
