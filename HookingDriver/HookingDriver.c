@@ -129,10 +129,13 @@ HookingDriverDriverEntryPoint(
 
 	Print(L"Loading HookingDriver\r\n");
 
-	// Initialize hashmap
+	// Initialize hashmap and log
 	gHashmap = ht_create();
+	gLog = list_create();
+
 	PerformHook();
 
+	// Subscribe to the UEFI unload event
 	Status = gBS->CreateEvent(
 		EVT_SIGNAL_EXIT_BOOT_SERVICES,
 		TPL_NOTIFY,

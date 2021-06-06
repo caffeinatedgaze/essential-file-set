@@ -31,6 +31,8 @@
   Hook.c
   ../hashmap.h
   ../hashmap.c
+  ../queue.h
+  ../queue.c
 
 [LibraryClasses]
   UefiDriverEntryPoint

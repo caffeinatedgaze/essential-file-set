@@ -5,7 +5,14 @@
 #include <Protocol/SimpleFileSystem.h>
 #include <Library/UefiBootServicesTableLib.h>
 
+#include "../queue.h"
+
+
+Queue *gLog;
+
 EFI_STATUS DoesFileExist(CHAR16 * FileName);
+
+EFI_STATUS DumpLogToFile(VOID);
 
 EFI_STATUS AppendToLog(IN EFI_BLOCK_IO_PROTOCOL *BlockIo, IN UINT32 MediaId, IN EFI_LBA Lba, IN UINTN BufferSize, IN VOID * Buffer, IN BOOLEAN isRead);
 

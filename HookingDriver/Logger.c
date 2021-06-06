@@ -6,10 +6,12 @@
 #include <IndustryStandard/Mbr.h>
 
 
+EFI_STATUS DoesFileExist(
+	CHAR16 *FileName
+)
 /*
 	Return EFI_SUCCESS if file exists
 */
-EFI_STATUS DoesFileExist(CHAR16 *FileName)
 {
 	EFI_STATUS status = 0;
 	EFI_FILE_PROTOCOL *Fs;
@@ -30,6 +32,51 @@ EFI_STATUS DoesFileExist(CHAR16 *FileName)
 }
 
 EFI_STATUS
+DumpLogToFile(
+	VOID
+)
+{
+	EFI_STATUS status = 0;
+	EFI_FILE_PROTOCOL *Fs;
+	EFI_FILE_PROTOCOL *File = NULL;
+	CHAR16 FileName[] = L"AAAMyLogFile.txt";
+
+	// Find a writable FS
+	status = FindWritableFs(&Fs);
+
+	if (EFI_ERROR(status)) {
+		DEBUG((EFI_D_ERROR, "DumpLogToFile: Can't find writable FS\n"));
+		return EFI_SUCCESS;
+	}
+
+	// Open or create an output file
+	status = Fs->Open(Fs, &File, FileName, EFI_FILE_MODE_CREATE | EFI_FILE_MODE_READ | EFI_FILE_MODE_WRITE, 0);
+	if (EFI_ERROR(status)) {
+		DEBUG((EFI_D_ERROR, "DumpLogToFile: Fs->Open of %s returned %r\n", FileName, status));
+		return status;
+	}
+
+	while (!list_empty(gLog)) {
+		VOID *buffer = list_dequeue(gLog);
+		status = WriteDataToFile(
+			buffer,
+			sizeof(buffer),
+			File
+		);
+
+		if (EFI_ERROR(status)) {
+			DEBUG((EFI_D_ERROR, "DumpLogToFile: WriteDataToFile of %s returned %r\n", buffer, status));
+			return status;
+		}
+	}
+
+	File->Flush(File);
+	File->Close(File);
+
+	return EFI_SUCCESS;
+}
+
+EFI_STATUS
 AppendToLog(
 	IN EFI_BLOCK_IO_PROTOCOL* BlockIo,
 	IN UINT32 MediaId,
@@ -39,29 +86,6 @@ AppendToLog(
 	IN BOOLEAN isRead
 )
 {
-	DEBUG((EFI_D_INFO, "Appending to log ... \r\n"));
-
-	EFI_STATUS status = 0;
-	EFI_FILE_PROTOCOL *Fs;
-	EFI_FILE_PROTOCOL *File = NULL;
-	CHAR16 FileName[] = L"AAAMyLogFile.txt";
-
-
-	// Find writable FS
-	status = FindWritableFs(&Fs);
-
-	if (EFI_ERROR(status)) {
-		DEBUG((EFI_D_ERROR, "AppendToLog: Can't find writable FS\n"));
-		return EFI_SUCCESS;
-	}
-
-	// Open or create output file
-	status = Fs->Open(Fs, &File, FileName, EFI_FILE_MODE_CREATE | EFI_FILE_MODE_READ | EFI_FILE_MODE_WRITE, 0);
-	if (EFI_ERROR(status)) {
-		DEBUG((EFI_D_ERROR, "AppendToLog: Fs->Open of %s returned %r\n", FileName, status));
-		return status;
-	}
-
 	UINT64 message[4] = { 0 }; // (UINT64) Lba, BufferSize, '\n' };
 
 	message[0] = (UINT64)isRead | (UINT64)MediaId << 32;
@@ -72,22 +96,6 @@ AppendToLog(
 	// todo: Retrieve GUID and store it in the log
 	// todo: pass EFI_HANDLE BlockIoHandle into the function too
 	// RetrieveGUID(BlockIo, *BlockIoHandle*);
-
-	status = WriteDataToFile(
-		message,
-		sizeof(message),
-		File
-	);
-
-	if (EFI_ERROR(status)) {
-		DEBUG((EFI_D_ERROR, "AppendToLog: WriteDataToFile of %s returned %r\n", message, status));
-		return status;
-	}
-
-	//  flush unwritten data
-	File->Flush(File);
-	//  close file
-	File->Close(File);
 
 	return EFI_SUCCESS;
 }
