@@ -192,7 +192,7 @@ WriteDataToFile(
 		goto FINALLY;
 	}
 
-	//    we move carriage to the end of the file
+	// we move carriage to the end of the file
 	status = File->SetPosition(
 		File,
 		fileInfo->FileSize

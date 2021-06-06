@@ -133,6 +133,14 @@ HookingDriverDriverEntryPoint(
 	gHashmap = ht_create();
 	PerformHook();
 
+	Status = gBS->CreateEvent(
+		EVT_SIGNAL_EXIT_BOOT_SERVICES,
+		TPL_NOTIFY,
+		NotifyHook, // notify function
+		NULL,
+		&mExitBootServicesEvent
+	);
+
 	return Status;
 }
 
