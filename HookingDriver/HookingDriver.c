@@ -39,13 +39,16 @@ HookingDriverUnload(
 	IN EFI_HANDLE  ImageHandle
 )
 {
+	PerformUnhook();
+	DumpLogToFile();
+
 	EFI_STATUS  Status;
 	EFI_HANDLE  *HandleBuffer;
 	UINTN       HandleCount;
 	UINTN       Index;
 
 	Status = EFI_SUCCESS;
-	//
+	// // //
 	// Retrieve array of all handles in the handle database
 	//
 	Status = gBS->LocateHandleBuffer(
@@ -59,19 +62,19 @@ HookingDriverUnload(
 		return Status;
 	}
 
-	//
+	// // //
 	// Disconnect the current driver from handles in the handle database 
 	//
 	for (Index = 0; Index < HandleCount; Index++) {
 		Status = gBS->DisconnectController(HandleBuffer[Index], gImageHandle, NULL);
 	}
 
-	//
+	// // // //
 	// Free the array of handles
-	//
+
 	FreePool(HandleBuffer);
 
-	//
+	// // // //
 	// Uninstall protocols installed in the driver entry point
 	// 
 	Status = gBS->UninstallMultipleProtocolInterfaces(
@@ -85,7 +88,7 @@ HookingDriverUnload(
 		return Status;
 	}
 
-	//
+	// //
 	// Do any additional cleanup that is required for this driver
 	//
 
@@ -132,6 +135,20 @@ HookingDriverDriverEntryPoint(
 	// Initialize hashmap and log
 	gHashmap = ht_create();
 	gLog = list_create();
+
+	UINT64 something[4] = { 0 };
+	something[0] = 0x539;
+	something[1] = 0x53A;
+	something[2] = 0x53B;
+	something[3] = 0x53C;
+
+	// list_enqueue(gLog, (VOID *)&something[0]);
+	// list_enqueue(gLog, (VOID *)&something[1]);
+	// list_enqueue(gLog, (VOID *)&something[2]);
+	// list_enqueue(gLog, (VOID *)&something[3]);
+
+	list_dump(gLog);
+	// list_dump_broken(gLog);
 
 	PerformHook();
 
@@ -201,7 +218,8 @@ HookingDriverDriverBindingSupported(
 
 	EFI_BLOCK_IO_PROTOCOL *BlkIoProtocol = NULL;
 
-	EFI_STATUS Status = gBS->OpenProtocol(
+	// EFI_STATUS Status =
+	gBS->OpenProtocol(
 		ControllerHandle,
 		&gEfiBlockIoProtocolGuid,
 		(VOID **)&BlkIoProtocol,
@@ -209,8 +227,8 @@ HookingDriverDriverBindingSupported(
 		ControllerHandle,
 		EFI_OPEN_PROTOCOL_GET_PROTOCOL
 	);
-	if (EFI_ERROR(Status))
-		return EFI_UNSUPPORTED;
+	// if (EFI_ERROR(Status))
+	// 	return EFI_UNSUPPORTED;
 
 	return EFI_SUCCESS;
 }
@@ -312,5 +330,6 @@ HookingDriverDriverBindingStop(
 	IN EFI_HANDLE                   *ChildHandleBuffer OPTIONAL
 )
 {
-	return EFI_UNSUPPORTED;
+	return EFI_SUCCESS;
+	// return EFI_UNSUPPORTED;
 }

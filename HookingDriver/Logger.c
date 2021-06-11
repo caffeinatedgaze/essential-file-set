@@ -57,10 +57,10 @@ DumpLogToFile(
 	}
 
 	while (!list_empty(gLog)) {
-		VOID *buffer = list_dequeue(gLog);
+		UINT64 *buffer = list_dequeue(gLog);
 		status = WriteDataToFile(
 			buffer,
-			sizeof(buffer),
+			sizeof(UINT64) * 6,
 			File
 		);
 
@@ -76,6 +76,8 @@ DumpLogToFile(
 	return EFI_SUCCESS;
 }
 
+// #pragma optimize( "", off )
+
 EFI_STATUS
 AppendToLog(
 	IN EFI_BLOCK_IO_PROTOCOL* BlockIo,
@@ -83,22 +85,41 @@ AppendToLog(
 	IN EFI_LBA Lba,
 	IN UINTN BufferSize,
 	IN VOID *Buffer,
-	IN BOOLEAN isRead
+	IN BOOLEAN isRead,
+
+	IN EFI_HANDLE BlkIoHandle,
+	IN EFI_BLOCK_IO_PROTOCOL *BlkIo,
+	IN pHookingContext context
 )
 {
-	UINT64 message[4] = { 0 }; // (UINT64) Lba, BufferSize, '\n' };
+	UINT64 *message; // = { 0 }; // (UINT64) Lba, BufferSize, '\n' };
+
+	message = AllocatePool(6 * sizeof(UINT64));
 
 	message[0] = (UINT64)isRead | (UINT64)MediaId << 32;
 	message[1] = (UINT64)Lba;
 	message[2] = (UINT64)BufferSize;
-	message[3] = (UINT64)0x1111111111111111;
+	message[3] = (UINT64)0x7777777777777777;
+	message[4] = (UINT64)0x7777777777777777;
+	message[5] = (UINT64)0x7777777777777777;
+
+	// message[0] = (UINT64)0x3333333333333333;
+	// message[1] = (UINT64)0x4444444444444444;
+	// message[2] = (UINT64)0x5555555555555555;
+	// message[3] = (UINT64)0x7777777777777777;
+
+	list_enqueue(gLog, (VOID *)message);
+	// UINT64 *buffer = (UINT64*)list_dequeue(gLog);
+	// DEBUG((EFI_D_INFO, "message: %s, buffer ptr %x\r\n", message, buffer));
 
 	// todo: Retrieve GUID and store it in the log
 	// todo: pass EFI_HANDLE BlockIoHandle into the function too
-	// RetrieveGUID(BlockIo, *BlockIoHandle*);
+	// RetrieveGUID(BlkIoHandle, BlkIo, context);
 
+	// return (EFI_STATUS)buffer;
 	return EFI_SUCCESS;
 }
+
 
 EFI_STATUS
 EFIAPI
@@ -211,7 +232,7 @@ WriteDataToFile(
 		goto FINALLY;
 	}
 
-	//    write buffer
+	// write buffer
 	status = File->Write(
 		File,
 		&BufferSize,

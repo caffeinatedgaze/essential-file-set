@@ -69,6 +69,7 @@ extern EFI_COMPONENT_NAME_PROTOCOL  gHookingDriverComponentName;
 
 #include "..\hashmap.h"
 #include "Hook.h"
+#include "Logger.h"
 
 ht_t *gHashmap; // maps protocol handles to context 
 
