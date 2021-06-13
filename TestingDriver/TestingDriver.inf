@@ -44,6 +44,7 @@
   gEfiComponentName2ProtocolGuid
   gEfiComponentNameProtocolGuid
   gEfiBlockIoProtocolGuid
+  gEfiSimpleFileSystemProtocolGuid
 
 [Guids]
-
+  gEfiFileInfoGuid

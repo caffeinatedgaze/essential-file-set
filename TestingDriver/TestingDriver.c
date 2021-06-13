@@ -13,7 +13,6 @@
 #include "TestingSource.h"
 
 
-
 ///
 /// Driver Binding Protocol instance
 ///
@@ -133,7 +132,8 @@ TestingDriverDriverEntryPoint (
 
   DEBUG((EFI_D_INFO, "TestSource.c: Entrypoint here ... \r\n"));
 
-  MyReadBlocks();
+  // MyReadBlocks();
+  MyReadFile(); // todo: actually, it only reads from "file.txt"
 
   return Status;
 }

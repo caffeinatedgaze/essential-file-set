@@ -18,3 +18,5 @@ EFI_STATUS
 CloseFile(
 	IN EFI_FILE_PROTOCOL* File
 );
+
+EFI_STATUS MyReadFile(VOID);
