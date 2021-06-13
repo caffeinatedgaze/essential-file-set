@@ -114,7 +114,7 @@ AppendToLog(
 
 	// todo: Retrieve GUID and store it in the log
 	// todo: pass EFI_HANDLE BlockIoHandle into the function too
-	EFI_GUID *diskGuid = (EFI_GUID *)AllocatePool(sizeof(diskGuid));
+	EFI_GUID *diskGuid = (EFI_GUID *)AllocateZeroPool(sizeof(diskGuid));
 
 	RetrieveGUID(BlkIoHandle, BlkIo, context, diskGuid);
 

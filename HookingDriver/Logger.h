@@ -15,6 +15,7 @@ EFI_STATUS DoesFileExist(CHAR16 * FileName);
 
 EFI_STATUS DumpLogToFile(VOID);
 
+
 EFI_STATUS AppendToLog(IN EFI_BLOCK_IO_PROTOCOL * BlockIo, IN UINT32 MediaId, IN EFI_LBA Lba, IN UINTN BufferSize, IN VOID * Buffer, IN BOOLEAN isRead, IN EFI_HANDLE BlkIoHandle, IN EFI_BLOCK_IO_PROTOCOL * BlkIo, IN pHookingContext context);
 
 EFI_STATUS EFIAPI FindWritableFs(OUT EFI_FILE_PROTOCOL ** WritableFs);
